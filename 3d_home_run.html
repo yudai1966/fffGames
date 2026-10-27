@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>3Dパワプロ風ホームランダービー in ドジャースタジアム</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@600;700&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #388ee7;
+            font-family: 'Zen Maru Gothic', 'Segoe UI', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .font-teko { font-family: 'Teko', sans-serif; }
+        .text-shadow-glow {
+            text-shadow: 0 0 12px rgba(255, 215, 0, 0.9), 0 0 24px rgba(255, 100, 0, 0.7);
+        }
+        .text-shadow-powerpro {
+            text-shadow: 4px 4px 0px #003a70, -3px -3px 0px #ffffff, 0 0 25px rgba(255,255,255,0.9);
+        }
+        @keyframes shake {
+            0% { transform: translate(3px, 3px) rotate(0deg); }
+            10% { transform: translate(-3px, -4px) rotate(-1deg); }
+            20% { transform: translate(-5px, 0px) rotate(1deg); }
+            30% { transform: translate(5px, 4px) rotate(0deg); }
+            40% { transform: translate(3px, -3px) rotate(1deg); }
+            50% { transform: translate(-3px, 4px) rotate(-1deg); }
+            60% { transform: translate(-5px, 3px) rotate(0deg); }
+            70% { transform: translate(5px, 3px) rotate(-1deg); }
+            80% { transform: translate(-3px, -3px) rotate(1deg); }
+            90% { transform: translate(3px, 4px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .animate-shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes popInImpact {
+            0% { transform: scale(0.1) rotate(-12deg) translateY(80px); opacity: 0; }
+            60% { transform: scale(1.25) rotate(3deg) translateY(-10px); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg) translateY(0); opacity: 1; }
+        }
+        .animate-impact {
+            animation: popInImpact 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen relative overflow-hidden flex flex-col justify-between">
+
+    <!-- WebGL Render Canvas Container -->
+    <div id="canvas-container" class="absolute inset-0 z-0"></div>
+
+    <!-- HUD Overlay -->
+    <div id="ui-layer" class="relative z-10 inset-0 pointer-events-none flex flex-col justify-between h-full p-3 md:p-6">
+        
+        <!-- Top Scoreboard Header -->
+        <div class="flex justify-between items-start w-full gap-2">
+            <!-- Left Info Panel -->
+            <div class="bg-blue-950/85 backdrop-blur-md border-2 border-yellow-400/80 rounded-2xl p-3 md:p-4 text-white shadow-2xl min-w-[150px] md:min-w-[210px]">
+                <div class="text-[10px] md:text-xs text-yellow-300 font-black tracking-widest flex items-center gap-1">
+                    <i class="fa-solid fa-ruler-horizontal"></i> TOTAL DISTANCE
+                </div>
+                <div class="flex items-baseline gap-1">
+                    <span id="score-text" class="text-3xl md:text-5xl font-extrabold font-teko text-yellow-400 tracking-tight leading-none">0</span>
+                    <span class="text-xs md:text-sm font-bold text-gray-200">m</span>
+                </div>
+                <div class="mt-2 pt-2 border-t border-blue-800/80 flex justify-between items-center text-xs md:text-sm">
+                    <span class="text-gray-300">最長飛距離:</span>
+                    <span class="font-bold font-teko text-lg md:text-xl text-emerald-300"><span id="best-dist-text">0</span>m</span>
+                </div>
+            </div>
+
+            <!-- Center Pitch Info & Pitcher Badge -->
+            <div class="flex flex-col items-center">
+                <!-- Randy Johnson Pitcher Tag -->
+                <div class="bg-gradient-to-r from-teal-900 via-blue-950 to-teal-900 border border-yellow-400/80 px-3.5 py-1 rounded-full text-yellow-300 text-[11px] md:text-xs font-black shadow-xl flex items-center gap-1.5 tracking-wider">
+                    <i class="fa-solid fa-user-ninja text-yellow-400"></i>
+                    <span>投手: ランディ・ジョンソン (#51 / 左投)</span>
+                </div>
+
+                <div id="combo-badge" class="mt-1 opacity-0 transition-all duration-300 bg-gradient-to-r from-red-600 via-amber-500 to-yellow-400 text-white font-black px-4 py-0.5 rounded-full text-xs md:text-sm shadow-2xl animate-bounce border border-yellow-200">
+                    <i class="fa-solid fa-fire mr-1 text-yellow-100"></i><span id="combo-count">2</span> 連発パワフルコンボ! (x<span id="combo-mult">1.2</span>)
+                </div>
+                
+                <!-- Current Pitch Specs -->
+                <div id="pitch-info" class="mt-1 bg-blue-900/90 backdrop-blur-md px-4 py-1.5 rounded-xl border border-sky-300/50 text-sky-100 text-xs md:text-sm font-bold flex items-center gap-2 shadow-lg">
+                    <span id="pitch-type" class="tracking-wide text-cyan-300">4シーム・ファスト</span>
+                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                    <span id="pitch-speed" class="font-teko text-xl md:text-2xl text-white">162</span> <span class="text-[10px] text-gray-300">km/h</span>
+                </div>
+            </div>
+
+            <!-- Right Out Counter Panel -->
+            <div class="bg-blue-950/85 backdrop-blur-md border-2 border-sky-400/80 rounded-2xl p-3 md:p-4 text-white shadow-2xl min-w-[140px] md:min-w-[190px] text-right">
+                <div class="text-[10px] md:text-xs text-sky-300 font-black tracking-widest flex items-center justify-end gap-1">
+                    REMAINING <i class="fa-solid fa-baseball"></i>
+                </div>
+                <div class="flex items-baseline justify-end gap-1">
+                    <span id="balls-left-text" class="text-3xl md:text-5xl font-extrabold font-teko text-cyan-300 tracking-tight leading-none">10</span>
+                    <span class="text-xs md:text-sm font-bold text-gray-200">球</span>
+                </div>
+                <div class="mt-2 pt-2 border-t border-blue-800/80 flex justify-between items-center text-xs md:text-sm">
+                    <span class="text-gray-300">本塁打:</span>
+                    <span class="font-bold font-teko text-lg md:text-xl text-yellow-300"><span id="hr-count-text">0</span>本</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center PowerPro Style Dynamic Impact Result Banner -->
+        <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full max-w-2xl px-4">
+            <div id="result-banner" class="hidden">
+                <h1 id="result-title" class="text-6xl md:text-9xl font-black italic tracking-wider text-shadow-powerpro transform -rotate-3 leading-none drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
+                    HOMERUN!
+                </h1>
+                
+                <!-- Hit Physics Metrics Grid -->
+                <div id="result-detail-box" class="mt-3 inline-flex items-center gap-3 md:gap-6 bg-blue-950/90 backdrop-blur-md border-2 border-yellow-400 px-5 py-2 rounded-2xl shadow-2xl">
+                    <div>
+                        <span class="text-[10px] md:text-xs text-gray-300 block">飛距離</span>
+                        <span id="result-dist" class="text-2xl md:text-4xl font-extrabold text-yellow-300 font-teko tracking-wider leading-none">145m <span class="text-xs text-yellow-100">(475 FT)</span></span>
+                    </div>
+                    <div class="w-px h-8 bg-blue-700"></div>
+                    <div>
+                        <span class="text-[10px] md:text-xs text-gray-300 block">打球速度</span>
+                        <span id="result-exit-speed" class="text-2xl md:text-4xl font-extrabold text-cyan-300 font-teko tracking-wider leading-none">178 km/h</span>
+                    </div>
+                    <div class="w-px h-8 bg-blue-700"></div>
+                    <div>
+                        <span class="text-[10px] md:text-xs text-gray-300 block">角度</span>
+                        <span id="result-angle" class="text-2xl md:text-4xl font-extrabold text-emerald-300 font-teko tracking-wider leading-none">28°</span>
+                    </div>
+                </div>
+
+                <div id="result-timing" class="mt-2 text-xs md:text-sm font-black px-5 py-1.5 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full inline-block text-blue-950 border border-white shadow-xl tracking-wider">
+                    DOKAN! PERFECT SWING!
+                </div>
+            </div>
+        </div>
+
+        <!-- Strike Zone & Timing Helper Bar -->
+        <div id="timing-guide-container" class="self-center mb-16 md:mb-20 flex flex-col items-center gap-1.5 transition-opacity duration-300">
+            <div class="text-xs text-yellow-200 font-black tracking-widest drop-shadow bg-blue-950/80 px-4 py-1 rounded-full border border-yellow-400/50">
+                <i class="fa-solid fa-crosshairs text-yellow-400 mr-1"></i> 208cmのビッグユニットから豪快アーチを奪え！
+            </div>
+            <div class="w-64 md:w-80 h-5 bg-blue-950/95 rounded-full border-2 border-sky-400/80 relative overflow-hidden shadow-2xl flex items-center">
+                <div class="absolute left-1/2 -translate-x-1/2 w-16 h-full bg-emerald-500/40 border-x-2 border-emerald-400"></div>
+                <div class="absolute left-1/2 -translate-x-1/2 w-3 h-full bg-yellow-300 shadow-[0_0_8px_#fde047]"></div>
+                <div id="timing-cursor" class="absolute left-0 top-0 w-3 h-full bg-white shadow-[0_0_12px_#ffffff]"></div>
+            </div>
+        </div>
+
+        <!-- Bottom Controls -->
+        <div class="w-full flex justify-between items-end">
+            <!-- Left Highscore -->
+            <div class="bg-blue-950/85 backdrop-blur-md px-3.5 py-2 rounded-xl border border-blue-700/60 text-xs text-gray-200 flex items-center gap-2 shadow-lg">
+                <i class="fa-solid fa-trophy text-yellow-400 text-sm"></i>
+                <span>ハイスコア: <strong id="hi-score-text" class="text-white font-teko text-xl">0</strong>m</span>
+            </div>
+
+            <!-- Swing Touch Target -->
+            <div id="swing-touch-zone" class="pointer-events-auto bg-gradient-to-t from-blue-700 via-blue-600 to-sky-400 hover:from-blue-600 hover:to-sky-300 text-white font-black px-8 py-3.5 md:px-12 md:py-4 rounded-2xl shadow-2xl border-2 border-yellow-300 cursor-pointer active:scale-95 transition-transform duration-75 flex items-center gap-3">
+                <i class="fa-solid fa-baseball text-2xl animate-spin" style="animation-duration: 4s;"></i>
+                <span class="text-xl md:text-3xl tracking-wider font-extrabold text-shadow-glow">SWING! <span class="text-xs font-normal opacity-80 block md:inline">(SPACE / TAP)</span></span>
+            </div>
+
+            <!-- Keyboard Hint -->
+            <div class="hidden sm:flex bg-blue-950/85 backdrop-blur-md px-3.5 py-2 rounded-xl border border-blue-700/60 text-xs text-gray-200 items-center gap-2 shadow-lg">
+                <i class="fa-solid fa-keyboard text-sky-300 text-sm"></i>
+                <span>Spaceキーでフルスイング</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Overlay Modal -->
+    <div id="start-modal" class="fixed inset-0 z-50 bg-blue-950/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-gradient-to-b from-blue-900 via-blue-950 to-slate-950 border-2 border-yellow-400/90 rounded-3xl p-6 md:p-8 max-w-md w-full text-center shadow-2xl text-white relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-36 h-36 bg-yellow-400/20 rounded-full blur-2xl"></div>
+            
+            <div class="inline-block bg-yellow-400/20 text-yellow-300 border border-yellow-400/50 px-4 py-1 rounded-full text-xs font-black tracking-widest mb-3">
+                VS THE BIG UNIT #51
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-white to-sky-300 mb-2 drop-shadow-md">
+                ランディ・ジョンソン<br>VS ホームラン競争
+            </h1>
+            <p class="text-gray-200 text-xs md:text-sm mb-6">ドジャースタジアムに降臨した身長208cmのビッグユニット！163km/hの剛速球と魔球スライダーをスタンドに叩き込め！</p>
+
+            <!-- Rules Summary -->
+            <div class="bg-blue-900/80 rounded-2xl p-4 text-left text-xs space-y-2.5 border border-sky-400/30 mb-6 shadow-inner">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-user-ninja text-yellow-300"></i>
+                    <span><strong>対戦投手:</strong> ランディ・ジョンソン (左投・ロー3/4サイドスロー)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-baseball text-cyan-300"></i>
+                    <span><strong>球種:</strong> 4シーム(163km/h), 魔球スライダー, シンカー, フォーク</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-video text-emerald-300"></i>
+                    <span><strong>パワプロアングル:</strong> 特大アーチを追う迫力追尾カメラ！</span>
+                </div>
+            </div>
+
+            <button id="start-btn" class="w-full bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-blue-950 font-black py-4 rounded-2xl text-xl shadow-2xl border border-yellow-200 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-play"></i>
+                勝負開始！
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Summary Modal -->
+    <div id="gameover-modal" class="hidden fixed inset-0 z-50 bg-blue-950/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-gradient-to-b from-blue-900 via-blue-950 to-slate-950 border-2 border-yellow-400/90 rounded-3xl p-6 md:p-8 max-w-lg w-full text-center shadow-2xl text-white relative">
+            <div class="text-yellow-300 text-xs font-black tracking-widest mb-1">GAME SET</div>
+            <h2 class="text-3xl md:text-4xl font-extrabold mb-4">対ビッグユニット 成績発表</h2>
+
+            <!-- Rank Badge Display -->
+            <div class="my-4 flex justify-center items-center gap-4 bg-blue-900/60 p-4 rounded-2xl border border-sky-400/30">
+                <div class="text-left">
+                    <div class="text-xs text-gray-300">評価ランク</div>
+                    <div id="final-rank" class="text-6xl md:text-7xl font-black font-teko text-yellow-400 tracking-tight leading-none drop-shadow-[0_0_15px_rgba(250,204,21,0.7)]">
+                        S
+                    </div>
+                </div>
+                <div id="rank-comment" class="text-xs md:text-sm font-bold text-gray-100 bg-blue-950/80 p-3 rounded-xl border border-blue-700/60 max-w-[220px]">
+                    ビッグユニットを完全に打ち砕いた！
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 gap-3 bg-blue-900/40 p-4 rounded-2xl border border-sky-400/20 my-4 text-left">
+                <div>
+                    <span class="text-xs text-gray-300 block">総飛距離</span>
+                    <span class="font-teko text-2xl md:text-3xl font-bold text-yellow-300"><span id="final-score">0</span> m</span>
+                </div>
+                <div>
+                    <span class="text-xs text-gray-300 block">ホームラン本数</span>
+                    <span class="font-teko text-2xl md:text-3xl font-bold text-cyan-300"><span id="final-hr">0</span> / 10 本</span>
+                </div>
+                <div>
+                    <span class="text-xs text-gray-300 block">最長飛距離</span>
+                    <span class="font-teko text-2xl md:text-3xl font-bold text-emerald-300"><span id="final-max">0</span> m</span>
+                </div>
+                <div>
+                    <span class="text-xs text-gray-300 block">ジャストミート率</span>
+                    <span class="font-teko text-2xl md:text-3xl font-bold text-pink-300"><span id="final-perfect">0</span> %</span>
+                </div>
+            </div>
+
+            <!-- New High Score Alert -->
+            <div id="new-record-tag" class="hidden mb-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-blue-950 font-black py-2 rounded-xl text-sm tracking-wider animate-pulse">
+                <i class="fa-solid fa-crown mr-1"></i> NEW HIGH SCORE!
+            </div>
+
+            <button id="retry-btn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black py-4 rounded-2xl text-xl shadow-xl border border-emerald-300 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-rotate-right"></i>
+                もう一度挑戦する
+            </button>
+        </div>
+    </div>
+
+    <!-- Web Audio API Synthesizer & Main Game Script -->
+    <script>
+        // --- SOUND EFFECTS SYNTHESIZER ---
+        class SoundFX {
+            constructor() { this.ctx = null; }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playPitchSound() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(360, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.22);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.22);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.22);
+            }
+            playSwingSound() {
+                if (!this.ctx) return;
+                const bufferSize = this.ctx.sampleRate * 0.18;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(500, this.ctx.currentTime);
+                filter.frequency.linearRampToValueAtTime(1100, this.ctx.currentTime + 0.12);
+                filter.Q.value = 3.5;
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                noise.start();
+            }
+            playHitSound(power = 1.0) {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                // Crack of the Bat
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(310 * power, now);
+                osc.frequency.exponentialRampToValueAtTime(55, now + 0.25);
+                gain.gain.setValueAtTime(0.95 * power, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(now + 0.28);
+
+                const osc2 = this.ctx.createOscillator();
+                const gain2 = this.ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(1500 * power, now);
+                osc2.frequency.exponentialRampToValueAtTime(350, now + 0.08);
+                gain2.gain.setValueAtTime(0.75 * power, now);
+                gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.09);
+                osc2.connect(gain2);
+                gain2.connect(this.ctx.destination);
+                osc2.start();
+                osc2.stop(now + 0.09);
+            }
+            playCheerSound() {
+                if (!this.ctx) return;
+                const duration = 2.8;
+                const bufferSize = this.ctx.sampleRate * duration;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(650, this.ctx.currentTime);
+                filter.frequency.linearRampToValueAtTime(1700, this.ctx.currentTime + 0.5);
+                filter.frequency.linearRampToValueAtTime(550, this.ctx.currentTime + duration);
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.01, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.4, this.ctx.currentTime + 0.4);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                noise.start();
+            }
+        }
+
+        const audio = new SoundFX();
+
+        // --- RANDY JOHNSON PITCH REPERTOIRE ---
+        const PITCH_TYPES = [
+            { name: '4シーム・ファスト', speedMin: 158, speedMax: 163, dx: -0.15, dy: 0, color: '#38bdf8' },
+            { name: '魔球スライダー', speedMin: 142, speedMax: 148, dx: 1.85, dy: -0.45, color: '#f43f5e' }, // Sweeping left-to-right break
+            { name: '高速シンカー', speedMin: 148, speedMax: 154, dx: -1.25, dy: -0.5, color: '#fbbf24' },
+            { name: 'フォーク', speedMin: 138, speedMax: 144, dx: 0.1, dy: -1.25, color: '#34d399' }
+        ];
+
+        let gameState = 'START'; // START, READY, PITCHING, HIT_FLIGHT, RESULT, GAMEOVER
+        let scoreTotalDistance = 0;
+        let ballsRemaining = 10;
+        let hrCount = 0;
+        let comboCount = 0;
+        let maxDistance = 0;
+        let perfectHitCount = 0;
+        let hiScore = localStorage.getItem('dodger_hr_hiscore') || 0;
+
+        let currentPitch = null;
+        let pitchStartTime = 0;
+        let pitchDuration = 1000;
+        let ballPos = new THREE.Vector3();
+        let ballVel = new THREE.Vector3();
+        let ballInFlight = false;
+        let swingTriggered = false;
+        let swingTime = 0;
+        let currentHitIsHR = false;
+
+        // Three.js Core Variables
+        let scene, camera, renderer;
+        let ballMesh, batterMesh, batMesh, pitcherGroup, pitcherLeftArm, pitcherRightLeg;
+        let fireworks = [];
+        let speedTrailParticles = [];
+
+        // PowerPro Pitching/Batting Camera Position
+        const PITCH_CAM_POS = new THREE.Vector3(0, 1.85, 2.7);
+        const PITCH_CAM_LOOK = new THREE.Vector3(0, 1.5, -18.44);
+
+        // --- DODGER STADIUM THREE.JS BUILDER ---
+        function initThreeJS() {
+            const container = document.getElementById('canvas-container');
+            
+            // Scene & Sky
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x3e97ee); // Sunny California Blue Sky
+            scene.fog = new THREE.FogExp2(0x9bd0ff, 0.00075);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 1200);
+            resetCamera();
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // Bright Sunlight & Ambient Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+
+            const sunLight = new THREE.DirectionalLight(0xfffaf0, 1.4);
+            sunLight.position.set(130, 210, 90);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 2048;
+            sunLight.shadow.mapSize.height = 2048;
+            sunLight.shadow.camera.near = 0.5;
+            sunLight.shadow.camera.far = 600;
+            const d = 180;
+            sunLight.shadow.camera.left = -d;
+            sunLight.shadow.camera.right = d;
+            sunLight.shadow.camera.top = d;
+            sunLight.shadow.camera.bottom = -d;
+            scene.add(sunLight);
+
+            // Visual Sun Orb
+            const sunGeo = new THREE.SphereGeometry(15, 32, 32);
+            const sunMat = new THREE.MeshBasicMaterial({ color: 0xfffde8 });
+            const sunMesh = new THREE.Mesh(sunGeo, sunMat);
+            sunMesh.position.copy(sunLight.position);
+            scene.add(sunMesh);
+
+            // Build Dodger Stadium Environment
+            buildDodgerStadium();
+
+            // Create Players (Including Randy Johnson) & Ball
+            createCharacters();
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function resetCamera() {
+            camera.position.copy(PITCH_CAM_POS);
+            camera.lookAt(PITCH_CAM_LOOK);
+        }
+
+        function buildDodgerStadium() {
+            // 1. Field Ground & Lawn Mower Stripes
+            const outfieldRadius = 150;
+            const grassGroup = new THREE.Group();
+
+            // Base Outfield Grass
+            const grassGeo = new THREE.CircleGeometry(outfieldRadius, 64, -Math.PI / 3.8, (2 * Math.PI) / 3.8);
+            const grassMat = new THREE.MeshStandardMaterial({ color: 0x228b3b, roughness: 0.65 });
+            const grassMesh = new THREE.Mesh(grassGeo, grassMat);
+            grassMesh.rotation.x = -Math.PI / 2;
+            grassMesh.receiveShadow = true;
+            grassGroup.add(grassMesh);
+
+            // Dodger Lawn Striated Pattern
+            const stripeMat = new THREE.MeshStandardMaterial({ color: 0x279942, roughness: 0.65 });
+            for (let r = 15; r < 140; r += 10) {
+                const stripeGeo = new THREE.RingGeometry(r, r + 5, 48, 1, -Math.PI / 3.8, (2 * Math.PI) / 3.8);
+                const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+                stripe.rotation.x = -Math.PI / 2;
+                stripe.position.y = 0.005;
+                stripe.receiveShadow = true;
+                grassGroup.add(stripe);
+            }
+            scene.add(grassGroup);
+
+            // 2. Dirt Diamond & Warning Track
+            const dirtMat = new THREE.MeshStandardMaterial({ color: 0x9e5f35, roughness: 0.9 });
+            
+            // Infield Dirt
+            const infieldGeo = new THREE.CircleGeometry(38, 32, 0, Math.PI / 2);
+            const infield = new THREE.Mesh(infieldGeo, dirtMat);
+            infield.rotation.x = -Math.PI / 2;
+            infield.rotation.z = Math.PI / 4;
+            infield.position.set(0, 0.01, -20);
+            infield.receiveShadow = true;
+            scene.add(infield);
+
+            // Warning Track
+            const warningGeo = new THREE.RingGeometry(118, 126, 64, 1, -Math.PI / 3.8, (2 * Math.PI) / 3.8);
+            const warningTrack = new THREE.Mesh(warningGeo, dirtMat);
+            warningTrack.rotation.x = -Math.PI / 2;
+            warningTrack.position.y = 0.01;
+            warningTrack.receiveShadow = true;
+            scene.add(warningTrack);
+
+            // Pitcher Mound & Home Plate
+            const moundGeo = new THREE.CylinderGeometry(2.7, 3.0, 0.25, 24);
+            const mound = new THREE.Mesh(moundGeo, dirtMat);
+            mound.position.set(0, 0.1, -18.44);
+            mound.receiveShadow = true;
+            scene.add(mound);
+
+            const plateGeo = new THREE.BoxGeometry(0.43, 0.03, 0.43);
+            const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const homePlate = new THREE.Mesh(plateGeo, whiteMat);
+            homePlate.position.set(0, 0.02, 0);
+            scene.add(homePlate);
+
+            // Strike Zone Grid Preview
+            createStrikeZoneGrid();
+
+            // 3. Dodger Blue Outfield Wall & Distance Markers
+            const wallRadius = 126;
+            const dodgerBlueMat = new THREE.MeshStandardMaterial({ color: 0x005a9c, roughness: 0.4 });
+            const wallGeo = new THREE.CylinderGeometry(wallRadius, wallRadius, 3.8, 64, 1, true, -Math.PI / 3.8, (2 * Math.PI) / 3.8);
+            const wall = new THREE.Mesh(wallGeo, dodgerBlueMat);
+            wall.position.set(0, 1.9, 0);
+            wall.receiveShadow = true;
+            scene.add(wall);
+
+            // Yellow Wall Top Lip
+            const yellowMat = new THREE.MeshBasicMaterial({ color: 0xffc72c });
+            const lipGeo = new THREE.CylinderGeometry(wallRadius + 0.05, wallRadius + 0.05, 0.25, 64, 1, true, -Math.PI / 3.8, (2 * Math.PI) / 3.8);
+            const lip = new THREE.Mesh(lipGeo, yellowMat);
+            lip.position.set(0, 3.8, 0);
+            scene.add(lip);
+
+            // Distance Markers (330ft, 385ft, 395ft, 400ft)
+            addDistanceMarker("330 FT", -78, 2.2, -98);
+            addDistanceMarker("395 FT", -38, 2.2, -120);
+            addDistanceMarker("400 FT", 0, 2.2, -125);
+            addDistanceMarker("395 FT", 38, 2.2, -120);
+            addDistanceMarker("330 FT", 78, 2.2, -98);
+
+            // 4. Iconic Dodger Stadium Seating Tiers
+            const seatingTiers = [
+                { radius: 132, height: 12, depth: 10, color: 0xfdb827, y: 6 },  // Field Level (Yellow)
+                { radius: 146, height: 18, depth: 12, color: 0xf58220, y: 18 }, // Loge Level (Coral/Orange)
+                { radius: 162, height: 22, depth: 14, color: 0x22d3ee, y: 32 }, // Reserve Level (Teal)
+                { radius: 180, height: 26, depth: 16, color: 0x005a9c, y: 48 }  // Top Deck (Dodger Blue)
+            ];
+
+            seatingTiers.forEach(tier => {
+                const tierGeo = new THREE.CylinderGeometry(
+                    tier.radius + tier.depth, tier.radius, tier.height, 48, 1, true, -Math.PI / 3.5, (2 * Math.PI) / 3.5
+                );
+                const tierMat = new THREE.MeshStandardMaterial({ color: tier.color, side: THREE.DoubleSide, roughness: 0.7 });
+                const grandstand = new THREE.Mesh(tierGeo, tierMat);
+                grandstand.position.set(0, tier.y, 0);
+                scene.add(grandstand);
+            });
+
+            // 5. Hexagonal Dodger Scoreboards
+            createHexagonalScoreboard(-65, 42, -118, -0.32);
+            createHexagonalScoreboard(65, 42, -118, 0.32);
+
+            // 6. Palm Trees & Background Hills
+            createOutfieldPlazaAndTrees();
+            createElysianHills();
+        }
+
+        function createStrikeZoneGrid() {
+            const gridGroup = new THREE.Group();
+            const mat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35 });
+            
+            const width = 0.55, height = 0.75;
+            const points = [
+                new THREE.Vector3(-width/2, 1.0, -0.2), new THREE.Vector3(width/2, 1.0, -0.2),
+                new THREE.Vector3(width/2, 1.0, -0.2), new THREE.Vector3(width/2, 1.0 + height, -0.2),
+                new THREE.Vector3(width/2, 1.0 + height, -0.2), new THREE.Vector3(-width/2, 1.0 + height, -0.2),
+                new THREE.Vector3(-width/2, 1.0 + height, -0.2), new THREE.Vector3(-width/2, 1.0, -0.2)
+            ];
+
+            const geo = new THREE.BufferGeometry().setFromPoints(points);
+            const grid = new THREE.LineSegments(geo, mat);
+            gridGroup.add(grid);
+            scene.add(gridGroup);
+        }
+
+        function addDistanceMarker(text, x, y, z) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 36px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(text, 64, 44);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const mat = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+            const geo = new THREE.PlaneGeometry(6, 3);
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(x, y, z);
+            mesh.lookAt(0, y, 0);
+            scene.add(mesh);
+        }
+
+        function createHexagonalScoreboard(x, y, z, rotationY) {
+            const group = new THREE.Group();
+
+            const shape = new THREE.Shape();
+            const w = 18, h = 10;
+            shape.moveTo(-w, -h / 2);
+            shape.lineTo(-w, h / 2);
+            shape.lineTo(0, h / 2 + 5);
+            shape.lineTo(w, h / 2);
+            shape.lineTo(w, -h / 2);
+            shape.lineTo(0, -h / 2 - 3);
+            shape.closePath();
+
+            const extrudeSettings = { depth: 1.8, bevelEnabled: true, bevelThickness: 0.4, bevelSize: 0.4 };
+            const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+            const frameMat = new THREE.MeshStandardMaterial({ color: 0x005a9c, roughness: 0.4 });
+            const frame = new THREE.Mesh(geo, frameMat);
+            group.add(frame);
+
+            // Screen
+            const screenGeo = new THREE.PlaneGeometry(32, 14);
+            const screenMat = new THREE.MeshBasicMaterial({ color: 0x081b33 });
+            const screen = new THREE.Mesh(screenGeo, screenMat);
+            screen.position.z = 1.9;
+            group.add(screen);
+
+            // Pillars
+            const pillarGeo = new THREE.CylinderGeometry(1.2, 1.4, 40);
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.5 });
+            const p1 = new THREE.Mesh(pillarGeo, pillarMat);
+            const p2 = new THREE.Mesh(pillarGeo, pillarMat);
+            p1.position.set(-10, -22, -1);
+            p2.position.set(10, -22, -1);
+            group.add(p1); group.add(p2);
+
+            group.position.set(x, y, z);
+            group.rotation.y = rotationY;
+            scene.add(group);
+        }
+
+        function createOutfieldPlazaAndTrees() {
+            const treePositions = [
+                [-85, -125], [-60, -135], [-35, -140],
+                [35, -140], [60, -135], [85, -125]
+            ];
+            treePositions.forEach(pos => createPalmTree(pos[0], 0, pos[1]));
+        }
+
+        function createPalmTree(x, y, z) {
+            const tree = new THREE.Group();
+            const trunkGeo = new THREE.CylinderGeometry(0.5, 0.85, 22, 10);
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 });
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.y = 11;
+            tree.add(trunk);
+
+            const leafMat = new THREE.MeshStandardMaterial({ color: 0x228b22, side: THREE.DoubleSide, roughness: 0.6 });
+            for (let j = 0; j < 8; j++) {
+                const leafGeo = new THREE.ConeGeometry(2.8, 11, 4);
+                const leaf = new THREE.Mesh(leafGeo, leafMat);
+                leaf.position.set(0, 22, 0);
+                leaf.rotation.x = Math.PI / 2.25;
+                leaf.rotation.y = (j / 8) * Math.PI * 2;
+                leaf.scale.set(1, 0.08, 1);
+                tree.add(leaf);
+            }
+            tree.position.set(x, y, z);
+            scene.add(tree);
+        }
+
+        function createElysianHills() {
+            const hillGroup = new THREE.Group();
+            const hillMat = new THREE.MeshStandardMaterial({ color: 0x4a7c59, roughness: 0.95 });
+            const configs = [
+                { x: -120, z: -220, radius: 90 },
+                { x: 0, z: -250, radius: 110 },
+                { x: 130, z: -210, radius: 85 }
+            ];
+            configs.forEach(conf => {
+                const hillGeo = new THREE.SphereGeometry(conf.radius, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+                const hill = new THREE.Mesh(hillGeo, hillMat);
+                hill.position.set(conf.x, -20, conf.z);
+                hillGroup.add(hill);
+            });
+            scene.add(hillGroup);
+        }
+
+        function createCharacters() {
+            // PowerPro Stylized Baseball
+            const ballGeo = new THREE.SphereGeometry(0.14, 16, 16);
+            const ballMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
+            ballMesh = new THREE.Mesh(ballGeo, ballMat);
+            ballMesh.castShadow = true;
+            ballMesh.position.set(0, -10, 0);
+            scene.add(ballMesh);
+
+            // ----------------------------------------------------
+            // RANDY JOHNSON "THE BIG UNIT #51" PITCHER MODEL (208cm / 6'10")
+            // ----------------------------------------------------
+            pitcherGroup = new THREE.Group();
+            const jerseyMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0 }); // Classic Grey/White Pinstripe Jersey
+            const capMat = new THREE.MeshStandardMaterial({ color: 0x0f172a }); // Dark Cap
+            const hairMat = new THREE.MeshStandardMaterial({ color: 0x271910 }); // Dark Brown Mullet Hair & Mustache
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
+
+            // 1. Tall Head & Cap
+            const pHead = new THREE.Mesh(new THREE.SphereGeometry(0.36, 16, 16), skinMat);
+            pHead.position.y = 2.05; // Towering Height
+            pitcherGroup.add(pHead);
+
+            const pCap = new THREE.Mesh(new THREE.SphereGeometry(0.38, 16, 16, 0, Math.PI * 2, 0, Math.PI / 1.9), capMat);
+            pCap.position.y = 2.08;
+            pitcherGroup.add(pCap);
+
+            const capBrimGeo = new THREE.BoxGeometry(0.32, 0.04, 0.35);
+            const capBrim = new THREE.Mesh(capBrimGeo, capMat);
+            capBrim.position.set(0, 2.18, 0.22);
+            capBrim.rotation.x = 0.1;
+            pitcherGroup.add(capBrim);
+
+            // Signature Long Hair Mullet & Mustache
+            const mulletGeo = new THREE.ConeGeometry(0.35, 0.6, 8);
+            const mullet = new THREE.Mesh(mulletGeo, hairMat);
+            mullet.position.set(0, 1.88, -0.22);
+            mullet.rotation.x = -0.4;
+            pitcherGroup.add(mullet);
+
+            const stacheGeo = new THREE.BoxGeometry(0.24, 0.05, 0.08);
+            const stache = new THREE.Mesh(stacheGeo, hairMat);
+            stache.position.set(0, 1.96, 0.33);
+            pitcherGroup.add(stache);
+
+            // 2. Extremely Long Slender Torso (6'10" / 208cm Proportions)
+            const pBody = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.2, 1.25), jerseyMat);
+            pBody.position.y = 1.28;
+            pBody.castShadow = true;
+            pitcherGroup.add(pBody);
+
+            // Jersey #51 Back Number Canvas Texture
+            const numCanvas = document.createElement('canvas');
+            numCanvas.width = 128; numCanvas.height = 128;
+            const nctx = numCanvas.getContext('2d');
+            nctx.fillStyle = '#0f172a';
+            nctx.font = 'bold 80px sans-serif';
+            nctx.textAlign = 'center';
+            nctx.fillText('51', 64, 90);
+            const numTexture = new THREE.CanvasTexture(numCanvas);
+            const numMat = new THREE.MeshBasicMaterial({ map: numTexture, transparent: true });
+            const numMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.35), numMat);
+            numMesh.position.set(0, 1.38, -0.21);
+            numMesh.rotation.y = Math.PI;
+            pitcherGroup.add(numMesh);
+
+            // 3. Long Limbs & Left-Handed Throwing Arm (Southpaw / 左投げ)
+            // Left Throwing Arm (Whip Sidearm / Low 3/4 Release Angle)
+            pitcherLeftArm = new THREE.Group();
+            const armGeo = new THREE.CylinderGeometry(0.08, 0.07, 0.88);
+            const armMesh = new THREE.Mesh(armGeo, jerseyMat);
+            armMesh.position.y = -0.4;
+            pitcherLeftArm.add(armMesh);
+            pitcherLeftArm.position.set(-0.35, 1.78, 0);
+            pitcherLeftArm.rotation.z = Math.PI / 2.8; // Low 3/4 Sidearm angle
+            pitcherLeftArm.rotation.x = -0.2;
+            pitcherGroup.add(pitcherLeftArm);
+
+            // Right Leg for High Kick Motion
+            pitcherRightLeg = new THREE.Group();
+            const legGeo = new THREE.CylinderGeometry(0.1, 0.08, 0.95);
+            const legMesh = new THREE.Mesh(legGeo, jerseyMat);
+            legMesh.position.y = -0.45;
+            pitcherRightLeg.add(legMesh);
+            pitcherRightLeg.position.set(0.18, 0.65, 0);
+            pitcherGroup.add(pitcherRightLeg);
+
+            // Left Plant Leg
+            const leftLeg = new THREE.Mesh(legGeo, jerseyMat);
+            leftLeg.position.set(-0.18, 0.45, 0);
+            pitcherGroup.add(leftLeg);
+
+            pitcherGroup.position.set(0, 0.1, -18.44);
+            scene.add(pitcherGroup);
+
+            // Batter Model
+            batterMesh = new THREE.Group();
+            const whiteJersey = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const dodgerBlueCap = new THREE.MeshStandardMaterial({ color: 0x005a9c });
+
+            const bHead = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), dodgerBlueCap);
+            bHead.position.y = 1.38;
+            batterMesh.add(bHead);
+
+            const bBody = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.24, 0.9), whiteJersey);
+            bBody.position.y = 0.68;
+            bBody.castShadow = true;
+            batterMesh.add(bBody);
+
+            // Wooden Bat
+            const batGeo = new THREE.CylinderGeometry(0.02, 0.055, 1.1, 12);
+            const batMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.3 });
+            batMesh = new THREE.Mesh(batGeo, batMat);
+            batMesh.position.set(0.35, 1.15, -0.2);
+            batMesh.rotation.z = -Math.PI / 4;
+            batMesh.rotation.x = Math.PI / 6;
+            batMesh.castShadow = true;
+            batterMesh.add(batMesh);
+
+            batterMesh.position.set(-0.7, 0, 0.2);
+            scene.add(batterMesh);
+        }
+
+        // --- GAME LOGIC ---
+        function initGame() {
+            document.getElementById('start-modal').classList.add('hidden');
+            document.getElementById('gameover-modal').classList.add('hidden');
+
+            scoreTotalDistance = 0;
+            ballsRemaining = 10;
+            hrCount = 0;
+            comboCount = 0;
+            maxDistance = 0;
+            perfectHitCount = 0;
+
+            updateUI();
+            startNextPitchSequence();
+        }
+
+        function startNextPitchSequence() {
+            if (ballsRemaining <= 0) {
+                endGame();
+                return;
+            }
+
+            gameState = 'READY';
+            resetCamera();
+            ballInFlight = false;
+            swingTriggered = false;
+            currentHitIsHR = false;
+            hideResultBanner();
+
+            // Reset Randy Johnson Pitcher Pose
+            pitcherLeftArm.rotation.set(-0.2, 0, Math.PI / 2.8);
+            pitcherRightLeg.rotation.set(0, 0, 0);
+
+            const pType = PITCH_TYPES[Math.floor(Math.random() * PITCH_TYPES.length)];
+            const speed = Math.floor(Math.random() * (pType.speedMax - pType.speedMin + 1)) + pType.speedMin;
+            
+            pitchDuration = (18.44 / (speed / 3.6)) * 1000 * 1.02;
+            currentPitch = { type: pType, speed: speed, duration: pitchDuration };
+
+            document.getElementById('pitch-type').textContent = pType.name;
+            document.getElementById('pitch-type').style.color = pType.color;
+            document.getElementById('pitch-speed').textContent = speed;
+
+            setTimeout(() => {
+                if (gameState === 'READY') {
+                    pitchBall();
+                }
+            }, 1100);
+        }
+
+        function pitchBall() {
+            gameState = 'PITCHING';
+            pitchStartTime = performance.now();
+            audio.playPitchSound();
+
+            // Randy Johnson Southpaw Release Point (Low 3/4 coming from wide left)
+            ballMesh.position.set(-0.95, 1.75, -18.2);
+
+            // Dynamic Pitching Motion (High Leg Kick & Sidearm Whip Release)
+            const duration = currentPitch.duration;
+            const startTime = performance.now();
+
+            function animatePitcherMotion() {
+                const elapsed = performance.now() - startTime;
+                const progress = Math.min(elapsed / (duration * 0.45), 1.0);
+
+                // High Leg Kick with Right Leg
+                pitcherRightLeg.rotation.x = -Math.PI * 0.55 * Math.sin(progress * Math.PI);
+                
+                // Left Arm Whip Motion
+                pitcherLeftArm.rotation.z = (Math.PI / 2.8) - (Math.PI * 0.8 * progress);
+                pitcherLeftArm.rotation.y = Math.PI * 0.4 * progress;
+
+                if (progress < 1.0 && gameState === 'PITCHING') {
+                    requestAnimationFrame(animatePitcherMotion);
+                }
+            }
+            animatePitcherMotion();
+        }
+
+        function triggerSwing() {
+            if (gameState !== 'PITCHING' || swingTriggered) return;
+            swingTriggered = true;
+            swingTime = performance.now();
+            audio.playSwingSound();
+
+            const swingDuration = 180;
+            const startTime = performance.now();
+
+            function animateSwing() {
+                const elapsed = performance.now() - startTime;
+                const progress = Math.min(elapsed / swingDuration, 1);
+                batMesh.rotation.y = -Math.PI * 1.25 * Math.sin(progress * Math.PI);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateSwing);
+                } else {
+                    batMesh.rotation.y = 0;
+                }
+            }
+            animateSwing();
+
+            evaluateHit();
+        }
+
+        function evaluateHit() {
+            const timeElapsed = swingTime - pitchStartTime;
+            const timingDiff = timeElapsed - currentPitch.duration;
+            const absDiff = Math.abs(timingDiff);
+
+            if (absDiff < 135) {
+                gameState = 'HIT_FLIGHT';
+                ballInFlight = true;
+
+                let hitQuality = 'GOOD';
+                let distance = 0;
+                let isHR = false;
+
+                if (absDiff < 32) {
+                    hitQuality = 'PERFECT';
+                    perfectHitCount++;
+                } else if (timingDiff < -65) {
+                    hitQuality = 'EARLY';
+                } else if (timingDiff > 65) {
+                    hitQuality = 'LATE';
+                }
+
+                // Physics Calculations
+                let exitSpeedKmh = Math.round(currentPitch.speed * (hitQuality === 'PERFECT' ? 1.16 : hitQuality === 'GOOD' ? 1.03 : 0.85));
+                let exitVelMps = exitSpeedKmh / 3.6;
+                let launchAngle = hitQuality === 'PERFECT' ? 29 + (Math.random() * 4 - 2) : 21 + (Math.random() * 16 - 8);
+                let angleRad = launchAngle * (Math.PI / 180);
+                let sprayAngle = (timingDiff / 100) * 0.45;
+
+                const vz = Math.cos(angleRad) * exitVelMps;
+                const vy = Math.sin(angleRad) * exitVelMps;
+                const vx = Math.sin(sprayAngle) * vz;
+
+                ballVel.set(vx, vy, -Math.cos(sprayAngle) * vz);
+                ballPos.copy(ballMesh.position);
+
+                distance = Math.floor((Math.pow(exitVelMps, 2) * Math.sin(2 * angleRad)) / 9.8);
+                if (hitQuality === 'PERFECT') distance = Math.max(distance, 134 + Math.floor(Math.random() * 32));
+                if (hitQuality === 'EARLY' || hitQuality === 'LATE') distance = Math.min(distance, 95);
+
+                isHR = distance >= 115 && Math.abs(sprayAngle) < 0.62;
+                currentHitIsHR = isHR;
+
+                audio.playHitSound(hitQuality === 'PERFECT' ? 1.6 : 1.0);
+                if (isHR) {
+                    triggerScreenShake();
+                    audio.playCheerSound();
+                    spawnFireworks();
+                }
+
+                processHitResult(isHR, distance, exitSpeedKmh, Math.round(launchAngle), hitQuality);
+
+            } else {
+                showResultBanner('MISS!', '0m', 0, 0, 'タイミング不一致', 'text-gray-400');
+                comboCount = 0;
+                ballsRemaining--;
+                updateUI();
+                setTimeout(startNextPitchSequence, 1800);
+            }
+        }
+
+        function processHitResult(isHR, distance, exitSpeed, angle, hitQuality) {
+            const ft = Math.round(distance * 3.28084);
+            if (isHR) {
+                hrCount++;
+                comboCount++;
+                if (comboCount > 1) {
+                    distance = Math.floor(distance * (1 + comboCount * 0.1));
+                }
+                scoreTotalDistance += distance;
+                if (distance > maxDistance) maxDistance = distance;
+
+                const titleText = hitQuality === 'PERFECT' ? 'DOKAN! HOMERUN!' : 'HOMERUN!';
+                showResultBanner(titleText, `${distance}m`, exitSpeed, angle, `${hitQuality} ARC!`, 'text-yellow-300');
+            } else {
+                comboCount = 0;
+                scoreTotalDistance += Math.floor(distance * 0.5);
+                showResultBanner('HIT!', `${distance}m`, exitSpeed, angle, `${hitQuality} TIMING`, 'text-cyan-300');
+            }
+
+            ballsRemaining--;
+            updateUI();
+
+            setTimeout(() => {
+                if (gameState === 'HIT_FLIGHT') {
+                    setTimeout(startNextPitchSequence, 2600);
+                }
+            }, 100);
+        }
+
+        function showResultBanner(title, detail, exitSpeed, angle, timingText, colorClass) {
+            const banner = document.getElementById('result-banner');
+            const titleEl = document.getElementById('result-title');
+            
+            titleEl.textContent = title;
+            titleEl.className = `text-6xl md:text-9xl font-black italic tracking-wider transform -rotate-3 leading-none ${colorClass} text-shadow-powerpro`;
+            
+            document.getElementById('result-dist').innerHTML = `${detail} <span class="text-xs text-yellow-100">(${Math.round(parseInt(detail)*3.28)} FT)</span>`;
+            document.getElementById('result-exit-speed').textContent = `${exitSpeed} km/h`;
+            document.getElementById('result-angle').textContent = `${angle}°`;
+            document.getElementById('result-timing').textContent = timingText;
+
+            banner.classList.remove('hidden');
+            banner.classList.add('animate-impact');
+        }
+
+        function hideResultBanner() {
+            const banner = document.getElementById('result-banner');
+            banner.classList.add('hidden');
+            banner.classList.remove('animate-impact');
+        }
+
+        function triggerScreenShake() {
+            const uiLayer = document.getElementById('ui-layer');
+            uiLayer.classList.add('animate-shake');
+            setTimeout(() => uiLayer.classList.remove('animate-shake'), 500);
+        }
+
+        function spawnFireworks() {
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const particleCount = 50;
+                    const pGeo = new THREE.BufferGeometry();
+                    const positions = [];
+                    const colors = [];
+
+                    const center = new THREE.Vector3((Math.random() - 0.5) * 70, 32 + Math.random() * 20, -90 - Math.random() * 40);
+                    const baseColor = new THREE.Color().setHSL(Math.random(), 1.0, 0.65);
+
+                    for (let p = 0; p < particleCount; p++) {
+                        positions.push(center.x, center.y, center.z);
+                        colors.push(baseColor.r, baseColor.g, baseColor.b);
+                    }
+
+                    pGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+                    pGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+                    const pMat = new THREE.PointsMaterial({ size: 1.6, vertexColors: true, transparent: true, opacity: 1 });
+                    const pSystem = new THREE.Points(pGeo, pMat);
+
+                    pSystem.userData = {
+                        vels: Array.from({ length: particleCount }, () => new THREE.Vector3(
+                            (Math.random() - 0.5) * 24,
+                            (Math.random() - 0.5) * 24,
+                            (Math.random() - 0.5) * 24
+                        )),
+                        life: 1.0
+                    };
+
+                    scene.add(pSystem);
+                    fireworks.push(pSystem);
+                }, i * 280);
+            }
+        }
+
+        function spawnSpeedTrailParticle(pos) {
+            const pGeo = new THREE.SphereGeometry(0.1, 8, 8);
+            const pMat = new THREE.MeshBasicMaterial({ color: 0xfff066, transparent: true, opacity: 0.8 });
+            const pMesh = new THREE.Mesh(pGeo, pMat);
+            pMesh.position.copy(pos);
+            scene.add(pMesh);
+
+            speedTrailParticles.push({ mesh: pMesh, life: 1.0 });
+        }
+
+        function updateUI() {
+            document.getElementById('score-text').textContent = scoreTotalDistance;
+            document.getElementById('best-dist-text').textContent = maxDistance;
+            document.getElementById('balls-left-text').textContent = ballsRemaining;
+            document.getElementById('hr-count-text').textContent = hrCount;
+            document.getElementById('hi-score-text').textContent = hiScore;
+
+            const comboBadge = document.getElementById('combo-badge');
+            if (comboCount > 1) {
+                comboBadge.classList.remove('opacity-0');
+                document.getElementById('combo-count').textContent = comboCount;
+                document.getElementById('combo-mult').textContent = (1 + comboCount * 0.1).toFixed(1);
+            } else {
+                comboBadge.classList.add('opacity-0');
+            }
+        }
+
+        function endGame() {
+            gameState = 'GAMEOVER';
+
+            if (scoreTotalDistance > hiScore) {
+                hiScore = scoreTotalDistance;
+                localStorage.setItem('dodger_hr_hiscore', hiScore);
+                document.getElementById('new-record-tag').classList.remove('hidden');
+            } else {
+                document.getElementById('new-record-tag').classList.add('hidden');
+            }
+
+            let rank = 'C';
+            let comment = 'ナイススイング！ビッグユニット攻略に向けて特訓を重ねよう！';
+            if (hrCount >= 8 || scoreTotalDistance >= 1150) {
+                rank = 'S';
+                comment = 'ランディ・ジョンソンを撃破した伝説のレジェンド打者！';
+            } else if (hrCount >= 5 || scoreTotalDistance >= 750) {
+                rank = 'A';
+                comment = 'ビッグユニットの魔球を見事に粉砕した主砲！';
+            } else if (hrCount >= 2 || scoreTotalDistance >= 350) {
+                rank = 'B';
+                comment = '160km/hオーバーの速球にアジャスト完了！';
+            }
+
+            const perfectRate = Math.round((perfectHitCount / 10) * 100);
+
+            document.getElementById('final-rank').textContent = rank;
+            document.getElementById('rank-comment').textContent = comment;
+            document.getElementById('final-score').textContent = scoreTotalDistance;
+            document.getElementById('final-hr').textContent = hrCount;
+            document.getElementById('final-max').textContent = maxDistance;
+            document.getElementById('final-perfect').textContent = perfectRate;
+
+            document.getElementById('gameover-modal').classList.remove('hidden');
+        }
+
+        // --- MAIN ANIMATION & POWERPRO CAMERA LOOP ---
+        function animate(now) {
+            requestAnimationFrame(animate);
+
+            // Pitch Trajectory
+            if (gameState === 'PITCHING') {
+                const elapsed = now - pitchStartTime;
+                const progress = Math.min(elapsed / currentPitch.duration, 1.0);
+
+                const breakX = currentPitch.type.dx * Math.sin(progress * Math.PI);
+                const breakY = currentPitch.type.dy * Math.sin(progress * Math.PI);
+
+                // Start pitch trajectory from left sidearm release point (-0.95)
+                const z = -18.2 + (18.2 * progress);
+                const y = 1.75 - (0.85 * progress) + breakY;
+                const x = -0.95 + (0.95 * progress) + breakX;
+
+                ballMesh.position.set(x, y, z);
+
+                const timingCursor = document.getElementById('timing-cursor');
+                if (timingCursor) {
+                    timingCursor.style.left = `${progress * 100}%`;
+                }
+
+                if (progress >= 1.0 && !swingTriggered) {
+                    gameState = 'RESULT';
+                    evaluateHit();
+                }
+            }
+
+            // PowerPro Style Hit Flight & Camera Motion
+            if (gameState === 'HIT_FLIGHT' && ballInFlight) {
+                ballVel.y -= 0.015; // Gravity
+                ballMesh.position.addScaledVector(ballVel, 0.05);
+
+                if (currentHitIsHR) {
+                    spawnSpeedTrailParticle(ballMesh.position);
+                }
+
+                // --- POWERPRO CAMERA TRACKING LOGIC ---
+                const targetCamPos = new THREE.Vector3();
+                const backOffset = 4.2;
+                const heightOffset = 1.8;
+                
+                targetCamPos.x = ballMesh.position.x * 0.7;
+                targetCamPos.y = Math.max(ballMesh.position.y - heightOffset, 1.5);
+                targetCamPos.z = ballMesh.position.z + backOffset;
+
+                // Smooth Lerp Camera Shift
+                camera.position.lerp(targetCamPos, 0.12);
+                camera.lookAt(ballMesh.position.x, ballMesh.position.y + 0.3, ballMesh.position.z);
+
+                // Ball Ground Landing Detection
+                if (ballMesh.position.y <= 0.1) {
+                    ballMesh.position.y = 0.1;
+                    ballInFlight = false;
+                }
+            }
+
+            // Speed Trail Particles Animation
+            speedTrailParticles.forEach((p, idx) => {
+                p.life -= 0.04;
+                p.mesh.scale.multiplyScalar(0.92);
+                p.mesh.material.opacity = p.life;
+                if (p.life <= 0) {
+                    scene.remove(p.mesh);
+                    speedTrailParticles.splice(idx, 1);
+                }
+            });
+
+            // Fireworks Particle Animation
+            fireworks.forEach((fw, index) => {
+                const positions = fw.geometry.attributes.position.array;
+                const vels = fw.userData.vels;
+                fw.userData.life -= 0.02;
+
+                for (let i = 0; i < vels.length; i++) {
+                    positions[i * 3] += vels[i].x * 0.05;
+                    positions[i * 3 + 1] += vels[i].y * 0.05 - 0.01;
+                    positions[i * 3 + 2] += vels[i].z * 0.05;
+                }
+                fw.geometry.attributes.position.needsUpdate = true;
+                fw.material.opacity = fw.userData.life;
+
+                if (fw.userData.life <= 0) {
+                    scene.remove(fw);
+                    fireworks.splice(index, 1);
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- EVENT BINDINGS ---
+        window.onload = function() {
+            initThreeJS();
+
+            const swingBtn = document.getElementById('swing-touch-zone');
+            const startBtn = document.getElementById('start-btn');
+            const retryBtn = document.getElementById('retry-btn');
+
+            function handleSwingAction(e) {
+                if (e) e.preventDefault();
+                audio.init();
+                if (gameState === 'PITCHING') {
+                    triggerSwing();
+                }
+            }
+
+            swingBtn.addEventListener('click', handleSwingAction);
+            swingBtn.addEventListener('touchstart', handleSwingAction, { passive: false });
+
+            window.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    audio.init();
+                    if (gameState === 'PITCHING') {
+                        triggerSwing();
+                    }
+                }
+            });
+
+            startBtn.addEventListener('click', () => {
+                audio.init();
+                initGame();
+            });
+
+            retryBtn.addEventListener('click', () => {
+                audio.init();
+                initGame();
+            });
+
+            animate(0);
+        };
+    </script>
+</body>
+</html>
