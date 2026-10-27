@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>クラシックピンボール</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Matter.js (物理エンジン) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <!-- Tone.js (サウンド) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- QRCode.js (QRコード生成ライブラリ) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            background-color: #05020a; /* Dark night theme */
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            touch-action: none;
+            font-family: 'Inter', sans-serif;
+        }
+        #game-container {
+            position: relative;
+            box-shadow: 0 0 40px rgba(236, 72, 153, 0.4); /* Neon magenta glow */
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: #0b0516; /* Deep dark purple */
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 2/3;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        .hud-text {
+            color: #facc15; /* Gold */
+            font-weight: 900;
+            font-size: 1.25rem;
+            text-shadow: 0 0 10px rgba(250, 204, 21, 0.8);
+            letter-spacing: 0.05em;
+        }
+        #inGameTitle {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 1rem;
+            color: #d946ef;
+            font-weight: 900;
+            font-size: 1.1rem;
+            text-shadow: 0 0 10px rgba(217, 70, 239, 0.8);
+            letter-spacing: 0.1em;
+            text-align: center;
+            opacity: 0.85;
+            line-height: 1.2;
+        }
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 2, 10, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+            backdrop-filter: blur(5px);
+            z-index: 20;
+        }
+        .btn {
+            background: linear-gradient(135deg, #d946ef, #8b5cf6);
+            color: white;
+            padding: 12px 32px;
+            border-radius: 9999px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.5);
+            transition: all 0.2s;
+            margin-top: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.7);
+        }
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 10px rgba(14, 165, 233, 0.5);
+        }
+        .btn-sub {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(217, 70, 239, 0.5);
+            color: #f5d0fe;
+            padding: 8px 20px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        .btn-sub:hover {
+            background: rgba(217, 70, 239, 0.2);
+            border-color: #d946ef;
+            box-shadow: 0 0 12px rgba(217, 70, 239, 0.4);
+            transform: translateY(-1px);
+        }
+        #qr-modal {
+            background: rgba(11, 5, 22, 0.96);
+            border: 1px solid rgba(217, 70, 239, 0.5);
+            box-shadow: 0 0 35px rgba(217, 70, 239, 0.3);
+        }
+        #qrcode-canvas img, #qrcode-canvas canvas {
+            margin: 0 auto;
+            border-radius: 8px;
+            padding: 8px;
+            background: #ffffff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+    
+    <div id="ui-layer">
+        <div class="relative w-full flex justify-between items-start">
+            <div class="hud-text z-10" id="scoreDisplay">SCORE: 0</div>
+            <div id="inGameTitle">クラシック<br>ピンボール</div>
+            <div class="hud-text z-10" id="livesDisplay">BALLS: 3</div>
+        </div>
+        <div class="hud-text text-sm text-center opacity-80 font-normal mt-2 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)] pb-4">
+            ◀ L-Tap / R-Tap ▶<br>or Arrow Keys
+        </div>
+    </div>
+
+    <div id="overlay">
+        <h1 class="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-cyan-400 mb-6 drop-shadow-[0_0_15px_rgba(217,70,239,0.8)] text-center w-full px-2 leading-tight" id="titleText">クラシック<br>ピンボール</h1>
+        
+        <div class="text-slate-200 mb-8 text-center text-sm px-6 font-medium leading-relaxed max-w-[90%]" id="instructionText">
+            <p class="text-lg text-yellow-300 mb-3 drop-shadow-[0_0_5px_rgba(253,224,71,0.8)] font-bold">【遊び方】</p>
+            画面の左右をタップ、または左右の矢印キーでバーを操作します。<br>
+            ボールを落とさずに的を打ってスコアを稼ごう！<br>
+            ボールは3球まで遊べます。
+        </div>
+        
+        <div class="text-3xl font-black text-yellow-400 hidden mb-4 drop-shadow-[0_0_15px_rgba(250,204,21,0.8)] text-center" id="finalScoreText"></div>
+        
+        <button class="btn" id="startBtn">スタート</button>
+
+        <div class="mt-4 flex gap-2">
+            <button class="btn-sub" id="openQrBtn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                QRコードでシェア
+            </button>
+        </div>
+    </div>
+
+    <!-- QR Modal -->
+    <div id="qrModalBackdrop" class="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div id="qr-modal" class="rounded-2xl p-5 w-full max-w-xs text-center flex flex-col items-center">
+            <h3 class="text-base font-bold text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-cyan-300 mb-1">
+                スマホで遊ぶ / 友人にシェア
+            </h3>
+            <p class="text-xs text-slate-300 mb-3">カメラでスキャンしてすぐプレイ！</p>
+            <div id="qrcode-canvas" class="mb-3"></div>
+            <div class="w-full flex items-center gap-1 mb-2">
+                <input id="shareUrlInput" type="text" class="w-full bg-slate-900 border border-purple-500/40 rounded px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-fuchsia-400" />
+                <button id="copyUrlBtn" class="bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-xs px-2.5 py-1.5 rounded font-bold transition whitespace-nowrap">コピー</button>
+            </div>
+            <p id="copyNotice" class="text-xs text-green-400 font-bold mb-2 hidden">URLをコピーしました！</p>
+            <button id="closeQrBtn" class="w-full py-1.5 mt-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-700">閉じる</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- 1. 基本設定と変数宣言 ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const GAME_WIDTH = 400;
+const GAME_HEIGHT = 600;
+
+const scoreDisplay = document.getElementById('scoreDisplay');
+const livesDisplay = document.getElementById('livesDisplay');
+const overlay = document.getElementById('overlay');
+const startBtn = document.getElementById('startBtn');
+const titleText = document.getElementById('titleText');
+const instructionText = document.getElementById('instructionText');
+const finalScoreText = document.getElementById('finalScoreText');
+
+let score = 0;
+let lives = 3;
+let gameState = 'START';
+let animationId;
+const keys = { left: false, right: false };
+
+// --- 2. オーディオ (Tone.js) ---
+let isToneInit = false;
+const synths = {};
+
+async function initAudio() {
+    if (isToneInit) return;
+    await Tone.start();
+    synths.bumper = new Tone.MembraneSynth({ pitchDecay: 0.05, octaves: 4, oscillator: { type: "sine" }, envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.1 } }).toDestination();
+    synths.bumper.volume.value = -8;
+    synths.flipper = new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.001, decay: 0.05, sustain: 0 } }).toDestination();
+    synths.flipper.volume.value = -15;
+    synths.lose = new Tone.Synth({ oscillator: { type: 'fmsawtooth', modulationType: 'sine' }, envelope: { attack: 0.05, decay: 0.5, sustain: 0.2, release: 1 } }).toDestination();
+    synths.lose.volume.value = -10;
+    isToneInit = true;
+}
+
+function playSound(type) {
+    if (!isToneInit) return;
+    try {
+        if (type === 'bumper') {
+            const notes = ['C3', 'D3', 'E3', 'G3', 'A3', 'C4'];
+            synths.bumper.triggerAttackRelease(notes[Math.floor(Math.random() * notes.length)], '16n');
+        } else if (type === 'flipper') {
+            synths.flipper.triggerAttackRelease('32n');
+        } else if (type === 'lose') {
+            synths.lose.triggerAttackRelease('G2', '8n');
+            synths.lose.frequency.rampTo('C2', 0.5);
+        }
+    } catch (e) { console.warn(e); }
+}
+
+// --- 3. Matter.js 物理エンジン ---
+const Engine = Matter.Engine,
+      Runner = Matter.Runner,
+      Bodies = Matter.Bodies,
+      Body = Matter.Body,
+      Composite = Matter.Composite,
+      Events = Matter.Events,
+      Constraint = Matter.Constraint;
+
+let engine, world, runner;
+let ball, leftFlipper, rightFlipper;
+
+function setupPhysics() {
+    if (engine) {
+        Matter.Runner.stop(runner);
+        Matter.Engine.clear(engine);
+    }
+    engine = Engine.create();
+    world = engine.world;
+    engine.gravity.y = 0.4; // ゆっくりとした重力
+    engine.positionIterations = 8;
+    engine.velocityIterations = 8;
+    runner = Runner.create();
+}
+
+function createTarget(x, y, shape, size, color, points, angle = 0) {
+    let options = { isStatic: true, restitution: 1.2, friction: 0, frictionStatic: 0, label: 'target', render: { visible: false } };
+    let body;
+    switch(shape) {
+        case 'circle': body = Bodies.circle(x, y, size, options); break;
+        case 'rectangle': body = Bodies.rectangle(x, y, size * 2, size, options); break;
+        case 'triangle': body = Bodies.polygon(x, y, 3, size, options); break;
+        case 'pentagon': body = Bodies.polygon(x, y, 5, size, options); break;
+        case 'hexagon': body = Bodies.polygon(x, y, 6, size, options); break;
+    }
+    Body.setAngle(body, angle);
+    body.customData = { color, points, flash: 0, shape, size };
+    return body;
+}
+
+// 摩擦を完全にゼロにして斜面で止まらないようにした壁
+function createWall(x, y, width, height, angle = 0) {
+    return Bodies.rectangle(x, y, width, height, {
+        isStatic: true,
+        angle: angle,
+        restitution: 0.1, // ボールが弾みすぎないように
+        friction: 0,
+        frictionStatic: 0,
+        label: 'wall'
+    });
+}
+
+function buildMap() {
+    Composite.clear(world);
+
+    // 外壁
+    Composite.add(world, [
+        createWall(GAME_WIDTH/2, -50, GAME_WIDTH, 100),
+        createWall(-25, GAME_HEIGHT/2, 50, GAME_HEIGHT),
+        createWall(GAME_WIDTH+25, GAME_HEIGHT/2, 50, GAME_HEIGHT),
+    ]);
+
+    // 斜面のガイド壁（インレーン） - 摩擦0、角度を少し急(Math.PI/3.5)にして絶対に転がるように
+    Composite.add(world, [
+        createWall(40, 460, 180, 20, Math.PI / 3.5),  // 左ガイド壁
+        createWall(360, 460, 180, 20, -Math.PI / 3.5), // 右ガイド壁
+        
+        // 落下防止用の下部ブロック（ガイドからフリッパー根本へ繋ぐ）
+        createWall(25, 570, 50, 100, 0),
+        createWall(375, 570, 50, 100, 0),
+        
+        // 上部の角
+        createWall(20, 20, 100, 20, Math.PI / 4),
+        createWall(380, 20, 100, 20, -Math.PI / 4),
+    ]);
+
+    // ターゲット群
+    const targets = [
+        createTarget(200, 100, 'hexagon', 25, '#facc15', 300),
+        createTarget(120, 160, 'circle', 18, '#e81cff', 100),
+        createTarget(280, 160, 'circle', 18, '#e81cff', 100),
+        createTarget(200, 220, 'pentagon', 22, '#00f0ff', 200),
+        createTarget(80, 280, 'rectangle', 15, '#8a2be2', 150, Math.PI/6),
+        createTarget(320, 280, 'rectangle', 15, '#8a2be2', 150, -Math.PI/6),
+        createTarget(150, 340, 'circle', 15, '#ff007f', 50),
+        createTarget(250, 340, 'circle', 15, '#ff007f', 50),
+        createTarget(200, 390, 'triangle', 20, '#facc15', 100, Math.PI),
+        // スリングショット
+        createTarget(90, 420, 'triangle', 20, '#00f0ff', 50, Math.PI / 3),
+        createTarget(310, 420, 'triangle', 20, '#00f0ff', 50, -Math.PI / 3 - Math.PI/2),
+    ];
+    Composite.add(world, targets);
+
+    // 超ロングフリッパー（ヒンジは外側、長さ180）
+    const flipperOpts = { isStatic: false, friction: 0, frictionStatic: 0, restitution: 0.1, density: 0.1, label: 'flipper' };
+    const flipperLength = 180;
+    leftFlipper = Bodies.rectangle(130, 540, flipperLength, 16, flipperOpts);
+    rightFlipper = Bodies.rectangle(270, 540, flipperLength, 16, flipperOpts);
+    
+    // ヒンジの作成（左:x=50, 右:x=350）
+    const leftHinge = Constraint.create({ pointA: { x: 50, y: 540 }, bodyB: leftFlipper, pointB: { x: -(flipperLength / 2 - 10), y: 0 }, stiffness: 1, length: 0, render: { visible: false } });
+    const rightHinge = Constraint.create({ pointA: { x: 350, y: 540 }, bodyB: rightFlipper, pointB: { x: (flipperLength / 2 - 10), y: 0 }, stiffness: 1, length: 0, render: { visible: false } });
+
+    Composite.add(world, [leftFlipper, rightFlipper, leftHinge, rightHinge]);
+}
+
+function spawnBall() {
+    if (ball) Composite.remove(world, ball);
+    // ボールの摩擦を完全に0にし、空気抵抗も極小にして斜面で止まらないようにする
+    ball = Bodies.circle(200, 30, 10, {
+        label: 'ball',
+        restitution: 0.4,
+        friction: 0,
+        frictionStatic: 0,
+        frictionAir: 0.002,
+        density: 0.05
+    });
+    Body.setVelocity(ball, { x: (Math.random() - 0.5) * 4, y: 0 });
+    Composite.add(world, ball);
+}
+
+// --- 4. 物理エンジンのイベント ---
+function registerPhysicsEvents() {
+    Events.on(engine, 'collisionStart', (event) => {
+        event.pairs.forEach((pair) => {
+            let bodyA = pair.bodyA;
+            let bodyB = pair.bodyB;
+            let target = (bodyA.label === 'target') ? bodyA : ((bodyB.label === 'target') ? bodyB : null);
+            let ballBody = (bodyA.label === 'ball') ? bodyA : ((bodyB.label === 'ball') ? bodyB : null);
+
+            if (target && ballBody) {
+                target.customData.flash = 12;
+                score += target.customData.points;
+                updateHUD();
+                playSound('bumper');
+                let dx = ballBody.position.x - target.position.x;
+                let dy = ballBody.position.y - target.position.y;
+                let len = Math.hypot(dx, dy) || 1;
+                Body.setVelocity(ballBody, { x: ballBody.velocity.x + (dx/len) * 5, y: ballBody.velocity.y + (dy/len) * 5 });
+            }
+        });
+    });
+
+    const REST_LEFT = Math.PI / 6;       
+    const ACTIVE_LEFT = -Math.PI / 7;    
+    const REST_RIGHT = -Math.PI / 6;     
+    const ACTIVE_RIGHT = Math.PI / 7;    
+
+    Events.on(engine, 'beforeUpdate', () => {
+        if (gameState !== 'PLAYING') return;
+
+        let diffLeft = (keys.left ? ACTIVE_LEFT : REST_LEFT) - leftFlipper.angle;
+        Body.setAngularVelocity(leftFlipper, diffLeft * 0.4);
+
+        let diffRight = (keys.right ? ACTIVE_RIGHT : REST_RIGHT) - rightFlipper.angle;
+        Body.setAngularVelocity(rightFlipper, diffRight * 0.4);
+
+        if (ball && ball.position.y > GAME_HEIGHT + 20) {
+            playSound('lose');
+            lives--;
+            updateHUD();
+            if (lives > 0) spawnBall();
+            else gameOver();
+        }
+    });
+}
+
+// --- 5. ゲーム制御と描画 ---
+function updateHUD() {
+    scoreDisplay.innerText = `SCORE: ${score}`;
+    livesDisplay.innerText = `BALLS: ${lives}`;
+}
+
+function gameOver() {
+    gameState = 'GAMEOVER';
+    overlay.classList.remove('hidden');
+    titleText.innerHTML = 'GAME<br>OVER';
+    titleText.classList.replace('from-fuchsia-500', 'from-red-600');
+    titleText.classList.replace('to-cyan-400', 'to-orange-500');
+    titleText.style.textShadow = '0 0 15px rgba(220, 38, 38, 0.8)';
+    instructionText.classList.add('hidden');
+    finalScoreText.classList.remove('hidden');
+    finalScoreText.innerText = `FINAL SCORE: ${score}`;
+    startBtn.innerText = 'スタート';
+}
+
+function startGame() {
+    score = 0;
+    lives = 3;
+    updateHUD();
+    titleText.innerHTML = 'クラシック<br>ピンボール';
+    titleText.classList.replace('from-red-600', 'from-fuchsia-500');
+    titleText.classList.replace('to-orange-500', 'to-cyan-400');
+    titleText.style.textShadow = '0 0 15px rgba(217,70,239,0.8)';
+    instructionText.classList.remove('hidden');
+    finalScoreText.classList.add('hidden');
+    overlay.classList.add('hidden');
+    
+    setupPhysics();
+    buildMap();
+    registerPhysicsEvents();
+    spawnBall();
+    gameState = 'PLAYING';
+    Runner.run(runner, engine);
+    if (!animationId) requestAnimationFrame(renderLoop);
+}
+
+function drawBodyPath(ctx, body) {
+    ctx.beginPath();
+    if (body.circleRadius) {
+        ctx.arc(body.position.x, body.position.y, body.circleRadius, 0, 2 * Math.PI);
+    } else if (body.vertices && body.vertices.length > 0) {
+        ctx.moveTo(body.vertices[0].x, body.vertices[0].y);
+        for (let j = 1; j < body.vertices.length; j++) ctx.lineTo(body.vertices[j].x, body.vertices[j].y);
+        ctx.closePath();
+    }
+}
+
+function renderLoop() {
+    if (gameState !== 'PLAYING') {
+        animationId = requestAnimationFrame(renderLoop);
+        return;
+    }
+
+    ctx.fillStyle = '#0b0516'; 
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    const bgGradient = ctx.createRadialGradient(GAME_WIDTH/2, GAME_HEIGHT/2, 50, GAME_WIDTH/2, GAME_HEIGHT/2, 400);
+    bgGradient.addColorStop(0, 'rgba(139, 92, 246, 0.15)');
+    bgGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = bgGradient;
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    Composite.allBodies(world).forEach(body => {
+        if (body.label === 'wall') {
+            ctx.fillStyle = '#170a2b'; ctx.strokeStyle = '#d946ef'; ctx.lineWidth = 2; ctx.shadowBlur = 10; ctx.shadowColor = '#d946ef';
+            drawBodyPath(ctx, body); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+        } else if (body.label === 'flipper') {
+            ctx.fillStyle = '#22d3ee'; ctx.strokeStyle = '#0891b2'; ctx.shadowBlur = 15; ctx.shadowColor = '#22d3ee'; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.lineWidth = 16;
+            drawBodyPath(ctx, body); ctx.stroke(); ctx.fill();
+            ctx.lineJoin = 'miter'; ctx.lineCap = 'butt'; ctx.lineWidth = 1; ctx.shadowBlur = 0;
+        } else if (body.label === 'target') {
+            let data = body.customData;
+            ctx.lineJoin = 'round';
+            if (data.flash > 0) { ctx.shadowBlur = 25; ctx.shadowColor = data.color; ctx.fillStyle = '#ffffff'; data.flash--; } 
+            else { ctx.shadowBlur = 10; ctx.shadowColor = data.color; ctx.fillStyle = data.color; }
+            drawBodyPath(ctx, body); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+            ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill(); ctx.shadowBlur = 0;
+        } else if (body.label === 'ball') {
+            const gradient = ctx.createRadialGradient(body.position.x - 3, body.position.y - 3, 1, body.position.x, body.position.y, body.circleRadius);
+            gradient.addColorStop(0, '#ffffff'); gradient.addColorStop(1, '#facc15');
+            ctx.fillStyle = gradient; ctx.shadowBlur = 20; ctx.shadowColor = '#facc15';
+            drawBodyPath(ctx, body); ctx.fill(); ctx.shadowBlur = 0;
+        }
+    });
+    animationId = requestAnimationFrame(renderLoop);
+}
+
+// --- 6. 入力 ---
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'ArrowLeft') { if(!keys.left && gameState === 'PLAYING') playSound('flipper'); keys.left = true; }
+    if (e.code === 'ArrowRight') { if(!keys.right && gameState === 'PLAYING') playSound('flipper'); keys.right = true; }
+});
+window.addEventListener('keyup', (e) => {
+    if (e.code === 'ArrowLeft') keys.left = false;
+    if (e.code === 'ArrowRight') keys.right = false;
+});
+
+function handleTouch(e, isDown) {
+    if(e.type.startsWith('touch')) e.preventDefault();
+    if(gameState !== 'PLAYING') return;
+    let touches = e.changedTouches ? e.changedTouches : [e];
+    if (!isDown && (!e.touches || e.touches.length === 0)) { keys.left = false; keys.right = false; }
+    if (isDown) {
+        for (let i = 0; i < touches.length; i++) {
+            if (touches[i].clientX < window.innerWidth / 2) { if(!keys.left) playSound('flipper'); keys.left = true; } 
+            else { if(!keys.right) playSound('flipper'); keys.right = true; }
+        }
+    }
+}
+
+canvas.addEventListener('touchstart', (e) => handleTouch(e, true), {passive: false});
+canvas.addEventListener('touchend', (e) => handleTouch(e, false), {passive: false});
+canvas.addEventListener('mousedown', (e) => handleTouch(e, true));
+canvas.addEventListener('mouseup', (e) => handleTouch(e, false));
+window.addEventListener('mouseup', () => { keys.left = false; keys.right = false; });
+window.addEventListener('touchend', (e) => { if(e.touches && e.touches.length===0){keys.left = false; keys.right = false;} });
+
+// --- 7. 初期化 ---
+startBtn.addEventListener('click', async () => { await initAudio(); startGame(); });
+
+// --- 8. QRコード共有 ---
+const openQrBtn = document.getElementById('openQrBtn');
+const closeQrBtn = document.getElementById('closeQrBtn');
+const qrModalBackdrop = document.getElementById('qrModalBackdrop');
+const qrcodeCanvas = document.getElementById('qrcode-canvas');
+const shareUrlInput = document.getElementById('shareUrlInput');
+const copyUrlBtn = document.getElementById('copyUrlBtn');
+const copyNotice = document.getElementById('copyNotice');
+let qrCodeInstance = null;
+
+function updateQRCode(url) {
+    if (!qrcodeCanvas) return;
+    qrcodeCanvas.innerHTML = '';
+    qrCodeInstance = new QRCode(qrcodeCanvas, { text: url || window.location.href, width: 150, height: 150, colorDark: "#0b0516", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+}
+
+openQrBtn.addEventListener('click', () => {
+    const currentUrl = window.location.href;
+    shareUrlInput.value = currentUrl;
+    updateQRCode(currentUrl);
+    copyNotice.classList.add('hidden');
+    qrModalBackdrop.classList.remove('hidden');
+});
+closeQrBtn.addEventListener('click', () => qrModalBackdrop.classList.add('hidden'));
+shareUrlInput.addEventListener('input', (e) => { if (e.target.value.trim()) updateQRCode(e.target.value.trim()); });
+copyUrlBtn.addEventListener('click', () => {
+    shareUrlInput.select(); shareUrlInput.setSelectionRange(0, 99999);
+    try { document.execCommand('copy'); copyNotice.classList.remove('hidden'); setTimeout(() => copyNotice.classList.add('hidden'), 2000); } 
+    catch (err) { console.error(err); }
+});
+
+ctx.fillStyle = '#0b0516';
+ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+</script>
+</body>
+</html>
