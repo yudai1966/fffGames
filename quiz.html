@@ -1,0 +1,2478 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>クイズ！小学生ミリオネア（全8コース・ふりがな対応）</title>
+    <style>
+        :root {
+            --bg-top: #1e3a8a;
+            --bg-mid: #090d24;
+            --bg-bot: #02040a;
+            --spot-1: rgba(56, 189, 248, 0.16);
+            --spot-2: rgba(250, 204, 21, 0.14);
+            --panel-bg-top: rgba(15, 23, 42, 0.94);
+            --panel-bg-bot: rgba(7, 11, 26, 0.98);
+            --accent-gold: #eab308;
+            --choice-bg-top: #172554;
+            --choice-bg-bot: #0f172a;
+            --choice-border: #60a5fa;
+            --text-main: #ffffff;
+            --text-sub: #cbd5e1;
+        }
+
+        body.theme-vivant {
+            --bg-top: #7f1d1d;
+            --bg-mid: #1c0505;
+            --bg-bot: #050101;
+            --spot-1: rgba(239, 68, 68, 0.22);
+            --spot-2: rgba(245, 158, 11, 0.16);
+            --panel-bg-top: rgba(28, 7, 7, 0.95);
+            --panel-bg-bot: rgba(12, 2, 2, 0.98);
+            --accent-gold: #f59e0b;
+            --choice-bg-top: #450a0a;
+            --choice-bg-bot: #1f0404;
+            --choice-border: #f87171;
+        }
+
+        body.theme-udai {
+            --bg-top: #065f46;
+            --bg-mid: #022c22;
+            --bg-bot: #01130e;
+            --spot-1: rgba(52, 211, 153, 0.2);
+            --spot-2: rgba(250, 204, 21, 0.16);
+            --panel-bg-top: rgba(6, 44, 34, 0.95);
+            --panel-bg-bot: rgba(2, 22, 17, 0.98);
+            --accent-gold: #eab308;
+            --choice-bg-top: #064e3b;
+            --choice-bg-bot: #022c22;
+            --choice-border: #34d399;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", system-ui, -apple-system, sans-serif;
+            background: radial-gradient(circle at 50% 18%, var(--bg-top) 0%, var(--bg-mid) 60%, var(--bg-bot) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            overflow-x: hidden;
+            user-select: none;
+            transition: background 0.4s ease;
+        }
+
+        .spotlight-bg {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                conic-gradient(from 155deg at 20% -10%, var(--spot-1) 0deg, transparent 28deg),
+                conic-gradient(from 185deg at 80% -10%, var(--spot-2) 0deg, transparent 28deg);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        ruby {
+            ruby-align: center;
+        }
+
+        rt {
+            font-size: 0.56em;
+            font-weight: 700;
+            color: #fde047;
+            letter-spacing: 0;
+        }
+
+        body.no-furigana rt {
+            display: none;
+        }
+
+        header {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 1080px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-coin {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fef08a 0%, #f59e0b 55%, #b45309 100%);
+            color: #090d24;
+            font-weight: 900;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fef9c3;
+            box-shadow: 0 0 16px rgba(245, 158, 11, 0.55);
+            flex-shrink: 0;
+        }
+
+        .brand-title {
+            font-size: clamp(16px, 3.2vw, 24px);
+            font-weight: 900;
+            background: linear-gradient(90deg, #fef08a, #f59e0b, #fef08a);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .brand-sub {
+            font-size: 11px;
+            color: #7dd3fc;
+            font-weight: 700;
+        }
+
+        body.theme-vivant .brand-sub { color: #fca5a5; }
+        body.theme-udai .brand-sub { color: #6ee7b7; }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn-header {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(125, 211, 252, 0.55);
+            color: #e0f2fe;
+            padding: 8px 13px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.15s, background 0.2s;
+        }
+
+        .btn-header:hover {
+            background: rgba(30, 41, 59, 0.98);
+            transform: translateY(-1px);
+        }
+
+        main {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 1080px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .tv-panel {
+            background: linear-gradient(180deg, var(--panel-bg-top) 0%, var(--panel-bg-bot) 100%);
+            border: 2px solid var(--accent-gold);
+            border-radius: 24px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.65), inset 0 0 18px rgba(255, 255, 255, 0.06);
+        }
+
+        /* 1. コース選択画面 */
+        .start-box {
+            padding: clamp(18px, 3.5vw, 34px);
+            text-align: center;
+            max-width: 860px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .pill-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 999px;
+            background: rgba(245, 158, 11, 0.18);
+            border: 1px solid rgba(251, 191, 36, 0.55);
+            color: #fde047;
+            font-size: 12px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .start-heading {
+            font-size: clamp(21px, 4.2vw, 32px);
+            font-weight: 900;
+            line-height: 1.3;
+            margin-bottom: 8px;
+        }
+
+        .start-desc {
+            font-size: 13px;
+            color: var(--text-sub);
+            line-height: 1.65;
+            margin-bottom: 20px;
+        }
+
+        .grade-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 560px) {
+            .grade-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+        }
+
+        .course-btn {
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-radius: 18px;
+            padding: 14px 10px;
+            color: #ffffff;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+            text-align: center;
+        }
+
+        .course-btn:hover {
+            transform: translateY(-3px);
+            filter: brightness(1.12);
+        }
+
+        .course-btn:active {
+            transform: scale(0.97);
+        }
+
+        .course-btn .c-title {
+            font-size: clamp(18px, 3vw, 23px);
+            font-weight: 900;
+            margin-bottom: 4px;
+            pointer-events: none;
+        }
+
+        .course-btn .c-sub {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(0, 0, 0, 0.32);
+            padding: 2px 10px;
+            border-radius: 999px;
+            pointer-events: none;
+        }
+
+        .g1 { background: linear-gradient(180deg, #db2777 0%, #9d174d 100%); border-color: #f9a8d4; }
+        .g2 { background: linear-gradient(180deg, #ea580c 0%, #9a3412 100%); border-color: #fdba74; }
+        .g3 { background: linear-gradient(180deg, #059669 0%, #065f46 100%); border-color: #6ee7b7; }
+        .g4 { background: linear-gradient(180deg, #0284c7 0%, #075985 100%); border-color: #7dd3fc; }
+        .g5 { background: linear-gradient(180deg, #4f46e5 0%, #312e81 100%); border-color: #a5b4fc; }
+        .g6 { background: linear-gradient(180deg, #7e22ce 0%, #4c1d95 100%); border-color: #fde047; }
+
+        .bonus-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 680px) {
+            .bonus-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .bonus-btn {
+            border-radius: 20px;
+            padding: 15px 16px;
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-align: left;
+        }
+
+        .bonus-btn > * {
+            pointer-events: none;
+        }
+
+        .bonus-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .bonus-btn:active {
+            transform: scale(0.98);
+        }
+
+        .bonus-vivant {
+            background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 48%, #450a0a 100%);
+            border: 2px solid #facc15;
+            box-shadow: 0 0 22px rgba(220, 38, 38, 0.45);
+        }
+
+        .bonus-udai {
+            background: linear-gradient(135deg, #065f46 0%, #059669 48%, #022c22 100%);
+            border: 2px solid #fde047;
+            box-shadow: 0 0 22px rgba(16, 185, 129, 0.42);
+        }
+
+        .bonus-tag {
+            display: inline-block;
+            background: #facc15;
+            color: #090d24;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+        }
+
+        .bonus-title {
+            font-size: clamp(16px, 2.6vw, 20px);
+            font-weight: 900;
+            color: #fef08a;
+        }
+
+        .bonus-sub {
+            font-size: 11px;
+            color: #f1f5f9;
+            margin-top: 3px;
+            line-height: 1.4;
+        }
+
+        .bonus-arrow {
+            font-size: 20px;
+            font-weight: 900;
+            color: #fde047;
+            flex-shrink: 0;
+        }
+
+        .btn-ranking-open {
+            background: linear-gradient(90deg, #eab308 0%, #facc15 50%, #eab308 100%);
+            color: #090d24;
+            border: none;
+            border-radius: 16px;
+            padding: 13px 28px;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(234, 179, 8, 0.4);
+            transition: transform 0.18s ease;
+        }
+
+        .btn-ranking-open:hover {
+            transform: scale(1.04);
+        }
+
+        /* 2. クイズプレイ画面 */
+        .game-layout {
+            display: grid;
+            grid-template-columns: 1fr 290px;
+            gap: 16px;
+            align-items: start;
+            width: 100%;
+        }
+
+        @media (max-width: 860px) {
+            .game-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .studio-main {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .status-bar {
+            padding: 14px 16px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .status-badges {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge-course {
+            background: #0284c7;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 900;
+            padding: 5px 11px;
+            border-radius: 10px;
+        }
+
+        body.theme-vivant .badge-course {
+            background: #b91c1c;
+            border: 1px solid #facc15;
+            color: #fef08a;
+        }
+
+        body.theme-udai .badge-course {
+            background: #047857;
+            border: 1px solid #fde047;
+            color: #fef08a;
+        }
+
+        .badge-qnum {
+            background: rgba(245, 158, 11, 0.18);
+            border: 1px solid #f59e0b;
+            color: #fde047;
+            font-size: 12px;
+            font-weight: 900;
+            padding: 5px 11px;
+            border-radius: 10px;
+        }
+
+        .timer-pill {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(15, 23, 42, 0.92);
+            border: 2px solid #38bdf8;
+            color: #e0f2fe;
+            font-size: 14px;
+            font-weight: 900;
+            padding: 4px 12px;
+            border-radius: 999px;
+            min-width: 82px;
+            justify-content: center;
+        }
+
+        .timer-pill.timer-danger {
+            border-color: #ef4444;
+            color: #fca5a5;
+            background: rgba(127, 29, 29, 0.85);
+            animation: blink-timer 0.6s infinite;
+        }
+
+        @keyframes blink-timer {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.07); }
+        }
+
+        .lifeline-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-life-wrap {
+            position: relative;
+            display: inline-block;
+        }
+
+        .life-ready-badge {
+            position: absolute;
+            top: -11px;
+            right: -6px;
+            background: linear-gradient(90deg, #f59e0b, #fde047);
+            color: #090d24;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 7px;
+            border-radius: 999px;
+            border: 1px solid #ffffff;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.95);
+            pointer-events: none;
+            z-index: 5;
+            white-space: nowrap;
+            animation: glow-bounce 1.2s infinite ease-in-out;
+        }
+
+        @keyframes glow-bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-3px) scale(1.06); }
+        }
+
+        .btn-life {
+            background: linear-gradient(180deg, #1e3a8a 0%, #172554 100%);
+            border: 2px solid #38bdf8;
+            color: #e0f2fe;
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+            transition: transform 0.15s, opacity 0.2s, border-color 0.2s;
+        }
+
+        body.theme-vivant .btn-life {
+            background: linear-gradient(180deg, #7f1d1d 0%, #450a0a 100%);
+            border-color: #f59e0b;
+            color: #fef08a;
+        }
+
+        body.theme-udai .btn-life {
+            background: linear-gradient(180deg, #065f46 0%, #022c22 100%);
+            border-color: #34d399;
+            color: #fef08a;
+        }
+
+        .btn-life:hover:not(:disabled) {
+            transform: translateY(-2px);
+            border-color: #fde047;
+        }
+
+        .btn-life:disabled {
+            opacity: 0.28;
+            text-decoration: line-through;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .question-box {
+            padding: clamp(18px, 3.5vw, 28px);
+            min-height: 155px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .q-category {
+            font-size: 12px;
+            font-weight: 800;
+            color: #fbbf24;
+            margin-bottom: 8px;
+        }
+
+        .q-text {
+            font-size: clamp(17px, 2.8vw, 22px);
+            font-weight: 900;
+            line-height: 1.7;
+            color: #ffffff;
+        }
+
+        .choices-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .choices-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+
+        .choice-btn {
+            background: linear-gradient(180deg, var(--choice-bg-top) 0%, var(--choice-bg-bot) 100%);
+            border: 2px solid var(--choice-border);
+            border-radius: 16px;
+            padding: 15px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            color: #ffffff;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+            transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .choice-btn > * {
+            pointer-events: none;
+        }
+
+        .choice-btn:hover:not(:disabled) {
+            border-color: #fde047;
+            transform: translateY(-2px);
+            box-shadow: 0 0 18px rgba(250, 204, 21, 0.35);
+        }
+
+        .choice-letter {
+            color: #fbbf24;
+            font-size: 19px;
+            font-weight: 900;
+            flex-shrink: 0;
+        }
+
+        .choice-label {
+            font-size: clamp(15px, 2.4vw, 18px);
+            font-weight: 800;
+            line-height: 1.5;
+        }
+
+        .choice-selected {
+            background: linear-gradient(180deg, #ea580c 0%, #9a3412 100%) !important;
+            border-color: #fef08a !important;
+            box-shadow: 0 0 24px rgba(249, 115, 22, 0.85) !important;
+            animation: pulse-orange 1.1s infinite;
+        }
+
+        .choice-correct {
+            background: linear-gradient(180deg, #059669 0%, #064e3b 100%) !important;
+            border-color: #6ee7b7 !important;
+            box-shadow: 0 0 28px rgba(16, 185, 129, 0.9) !important;
+        }
+
+        .choice-wrong {
+            background: linear-gradient(180deg, #dc2626 0%, #7f1d1d 100%) !important;
+            border-color: #fca5a5 !important;
+            box-shadow: 0 0 24px rgba(239, 68, 68, 0.85) !important;
+        }
+
+        .choice-eliminated {
+            opacity: 0.18 !important;
+            pointer-events: none;
+            filter: grayscale(100%);
+        }
+
+        @keyframes pulse-orange {
+            0%, 100% { box-shadow: 0 0 14px rgba(249, 115, 22, 0.7); }
+            50% { box-shadow: 0 0 28px rgba(254, 240, 138, 0.95); }
+        }
+
+        .bottom-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding-top: 4px;
+        }
+
+        .btn-quit {
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid #475569;
+            color: #cbd5e1;
+            padding: 9px 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-dropout {
+            background: linear-gradient(90deg, #d97706 0%, #f59e0b 100%);
+            border: none;
+            color: #090d24;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+        }
+
+        .ladder-panel {
+            padding: 16px;
+        }
+
+        .ladder-title {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 900;
+            color: #fbbf24;
+            letter-spacing: 0.08em;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .ladder-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 4px;
+        }
+
+        .ladder-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #94a3b8;
+        }
+
+        .ladder-item.is-safety {
+            color: #fde047;
+            background: rgba(250, 204, 21, 0.08);
+            border: 1px solid rgba(250, 204, 21, 0.25);
+        }
+
+        .ladder-item.is-passed {
+            color: #4ade80;
+        }
+
+        .ladder-item.is-active {
+            background: linear-gradient(90deg, #d97706 0%, #facc15 50%, #d97706 100%);
+            color: #090d24;
+            font-weight: 900;
+            box-shadow: 0 0 12px rgba(250, 204, 21, 0.65);
+        }
+
+        /* 3. リザルト画面 */
+        .result-box {
+            padding: clamp(22px, 4vw, 38px);
+            text-align: center;
+            max-width: 640px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .result-icon {
+            font-size: 56px;
+            margin-bottom: 8px;
+        }
+
+        .result-title {
+            font-size: clamp(22px, 4.5vw, 34px);
+            font-weight: 900;
+            color: #facc15;
+            margin-bottom: 10px;
+        }
+
+        .result-desc {
+            font-size: 14px;
+            color: #e2e8f0;
+            line-height: 1.65;
+            margin-bottom: 20px;
+        }
+
+        .prize-summary-card {
+            background: rgba(2, 6, 23, 0.85);
+            border: 2px solid rgba(234, 179, 8, 0.65);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 20px;
+        }
+
+        .prize-summary-val {
+            font-size: clamp(28px, 6vw, 44px);
+            font-weight: 900;
+            color: #fde047;
+            margin: 4px 0;
+        }
+
+        .prize-summary-sub {
+            font-size: 13px;
+            font-weight: 800;
+            color: #4ade80;
+        }
+
+        .register-card {
+            background: rgba(30, 58, 138, 0.35);
+            border: 1px solid rgba(56, 189, 248, 0.45);
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .register-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .input-nick {
+            background: #0f172a;
+            border: 2px solid #38bdf8;
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 800;
+            width: 210px;
+            outline: none;
+        }
+
+        .input-nick:focus {
+            border-color: #facc15;
+        }
+
+        .result-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        /* モーダル */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.82);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+        }
+
+        .modal-card {
+            padding: 24px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal-card.modal-wide {
+            max-width: 640px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #f59e0b 0%, #facc15 100%);
+            color: #090d24;
+            border: none;
+            border-radius: 12px;
+            padding: 11px 22px;
+            font-size: 14px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+        }
+
+        .btn-secondary {
+            background: #1e293b;
+            color: #e2e8f0;
+            border: 1px solid #475569;
+            border-radius: 12px;
+            padding: 11px 18px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .rank-tabs {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            background: #020617;
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid #1e293b;
+            margin-bottom: 14px;
+        }
+
+        .rank-tab-btn {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid transparent;
+            color: #94a3b8;
+            padding: 7px 4px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .rank-tab-btn.active {
+            background: linear-gradient(90deg, #eab308, #facc15);
+            color: #090d24;
+        }
+
+        .rank-tab-btn.tab-vivant.active {
+            background: linear-gradient(90deg, #dc2626, #b91c1c);
+            color: #fef08a;
+            border-color: #facc15;
+        }
+
+        .rank-tab-btn.tab-udai.active {
+            background: linear-gradient(90deg, #059669, #047857);
+            color: #fef08a;
+            border-color: #fde047;
+        }
+
+        .rank-table-wrap {
+            background: #020617;
+            border: 1px solid #1e293b;
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        table.rank-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        table.rank-table th {
+            background: #0f172a;
+            color: #94a3b8;
+            padding: 9px 8px;
+            font-weight: 800;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        table.rank-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(30, 41, 59, 0.7);
+        }
+
+        .aud-wrap {
+            background: #020617;
+            border: 1px solid #334155;
+            border-radius: 14px;
+            padding: 14px;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .aud-bar-bg {
+            width: 100%;
+            height: 12px;
+            background: #1e293b;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .aud-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #38bdf8, #3b82f6);
+            border-radius: 999px;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 14px;
+            top: -20px;
+            z-index: 70;
+            pointer-events: none;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(105vh) rotate(720deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="spotlight-bg"></div>
+
+    <!-- ヘッダー -->
+    <header>
+        <div class="brand">
+            <div class="brand-coin">¥</div>
+            <div>
+                <div class="brand-title">クイズ！<ruby>小学生<rt>しょうがくせい</rt></ruby>ミリオネア</div>
+                <div class="brand-sub" id="header-subtitle">1<ruby>年生<rt>ねんせい</rt></ruby>〜6<ruby>年生<rt>ねんせい</rt></ruby> ＋ <ruby>番外編<rt>ばんがいへん</rt></ruby>VIVANT・<ruby>宇大附属小<rt>うだいふぞくしょう</rt></ruby>！</div>
+            </div>
+        </div>
+        <div class="header-controls">
+            <button id="btn-furigana-toggle" type="button" class="btn-header">あ ふりがな: ON</button>
+            <button id="btn-sound-toggle" type="button" class="btn-header">🔊 <ruby>音<rt>おと</rt></ruby>: ON</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- 1. コース選択画面 -->
+        <section id="screen-start" class="tv-panel start-box">
+            <div class="pill-badge">✨ <ruby>全<rt>ぜん</rt></ruby>8コース・120<ruby>問収録<rt>もんしゅうろく</rt></ruby> リアルクイズバトル ✨</div>
+            <h1 class="start-heading">コースをえらんでスタート！</h1>
+            <p class="start-desc">
+                10<ruby>問連続<rt>もんれんぞく</rt></ruby>せいかいで <strong style="color:#fde047;">1,000<ruby>万円<rt>まんえん</rt></ruby></strong> かくとく！<br>
+                ピンチのときは 3つの「おたすけアイテム」をつかおう！
+            </p>
+
+            <div class="grade-grid">
+                <button type="button" class="course-btn g1" data-course="1">
+                    <div class="c-title">1<ruby>年生<rt>ねんせい</rt></ruby></div>
+                    <div class="c-sub">ひらがな・45<ruby>秒<rt>びょう</rt></ruby></div>
+                </button>
+                <button type="button" class="course-btn g2" data-course="2">
+                    <div class="c-title">2<ruby>年生<rt>ねんせい</rt></ruby></div>
+                    <div class="c-sub"><ruby>九九<rt>くく</rt></ruby>・せいかつ・45<ruby>秒<rt>びょう</rt></ruby></div>
+                </button>
+                <button type="button" class="course-btn g3" data-course="3">
+                    <div class="c-title">3<ruby>年生<rt>ねんせい</rt></ruby></div>
+                    <div class="c-sub"><ruby>理科<rt>りか</rt></ruby>・<ruby>社会<rt>しゃかい</rt></ruby>スタート</div>
+                </button>
+                <button type="button" class="course-btn g4" data-course="4">
+                    <div class="c-title">4<ruby>年生<rt>ねんせい</rt></ruby></div>
+                    <div class="c-sub"><ruby>都道府県<rt>とどうふけん</rt></ruby>・<ruby>星<rt>ほし</rt></ruby>と<ruby>月<rt>つき</rt></ruby></div>
+                </button>
+                <button type="button" class="course-btn g5" data-course="5">
+                    <div class="c-title">5<ruby>年生<rt>ねんせい</rt></ruby></div>
+                    <div class="c-sub"><ruby>割合<rt>わりあい</rt></ruby>・<ruby>産業<rt>さんぎょう</rt></ruby>・<ruby>世界<rt>せかい</rt></ruby></div>
+                </button>
+                <button type="button" class="course-btn g6" data-course="6">
+                    <div class="c-title">6<ruby>年生<rt>ねんせい</rt></ruby></div>
+                    <div class="c-sub"><ruby>歴史<rt>れきし</rt></ruby>・<ruby>政治<rt>せいじ</rt></ruby>・<ruby>人体<rt>じんたい</rt></ruby></div>
+                </button>
+            </div>
+
+            <div class="bonus-grid">
+                <button type="button" class="bonus-btn bonus-vivant" data-course="vivant">
+                    <div>
+                        <div class="bonus-tag">🕵️ BONUS STAGE 1</div>
+                        <div class="bonus-title"><ruby>番外編<rt>ばんがいへん</rt></ruby>：ドラマ VIVANT</div>
+                        <div class="bonus-sub"><ruby>別班<rt>べっぱん</rt></ruby>・テント・バルカ<ruby>共和国<rt>きょうわこく</rt></ruby>・ドラムの<ruby>名場面<rt>めいばめん</rt></ruby>クイズ（<ruby>全<rt>ぜん</rt></ruby>15<ruby>問<rt>もん</rt></ruby>）</div>
+                    </div>
+                    <div class="bonus-arrow">▶</div>
+                </button>
+
+                <button type="button" class="bonus-btn bonus-udai" data-course="udai">
+                    <div>
+                        <div class="bonus-tag">🏫 BONUS STAGE 2</div>
+                        <div class="bonus-title"><ruby>番外編<rt>ばんがいへん</rt></ruby>：<ruby>宇都宮大学附属小学校<rt>うつのみやだいがくふぞくしょうがっこう</rt></ruby></div>
+                        <div class="bonus-sub"><ruby>松原<rt>まつばら</rt></ruby>の<ruby>学校生活<rt>がっこうせいかつ</rt></ruby>・<ruby>各学年<rt>かくがくねん</rt></ruby>の<ruby>合言葉<rt>あいことば</rt></ruby>・<ruby>第<rt>だい</rt></ruby>7<ruby>学年<rt>がくねん</rt></ruby>クイズ（<ruby>全<rt>ぜん</rt></ruby>15<ruby>問<rt>もん</rt></ruby>）</div>
+                    </div>
+                    <div class="bonus-arrow">▶</div>
+                </button>
+            </div>
+
+            <button id="btn-open-ranking-start" type="button" class="btn-ranking-open">
+                🏆 <ruby>全<rt>ぜん</rt></ruby>8コース・ランキング TOP 5 を<ruby>見<rt>み</rt></ruby>る
+            </button>
+        </section>
+
+        <!-- 2. クイズプレイ画面 -->
+        <section id="screen-game" class="hidden game-layout">
+            <div class="studio-main">
+                <div class="tv-panel status-bar">
+                    <div class="status-badges">
+                        <span id="badge-course" class="badge-course">1<ruby>年生<rt>ねんせい</rt></ruby>コース</span>
+                        <span id="badge-qnum" class="badge-qnum"><ruby>第<rt>だい</rt></ruby> 1 <ruby>問<rt>もん</rt></ruby> / 10</span>
+                        <div id="timer-box" class="timer-pill">⏱ <span id="timer-sec">35</span><ruby>秒<rt>びょう</rt></ruby></div>
+                    </div>
+
+                    <div class="lifeline-group">
+                        <div class="btn-life-wrap">
+                            <span id="badge-life-5050" class="life-ready-badge">🌟つかえる</span>
+                            <button id="life-5050" type="button" class="btn-life">50:50</button>
+                        </div>
+                        <div class="btn-life-wrap">
+                            <span id="badge-life-phone" class="life-ready-badge">🌟つかえる</span>
+                            <button id="life-phone" type="button" class="btn-life">📞 テレフォン</button>
+                        </div>
+                        <div class="btn-life-wrap">
+                            <span id="badge-life-audience" class="life-ready-badge">🌟つかえる</span>
+                            <button id="life-audience" type="button" class="btn-life">📊 オーディエンス</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tv-panel question-box">
+                    <div id="question-category" class="q-category">【ジャンル：さんすう】</div>
+                    <div id="question-text" class="q-text">ここに問題文が表示されます。</div>
+                </div>
+
+                <div class="choices-grid">
+                    <button id="choice-0" type="button" class="choice-btn" data-choice="0">
+                        <span class="choice-letter">A:</span>
+                        <span id="choice-text-0" class="choice-label">選択肢A</span>
+                    </button>
+                    <button id="choice-1" type="button" class="choice-btn" data-choice="1">
+                        <span class="choice-letter">B:</span>
+                        <span id="choice-text-1" class="choice-label">選択肢B</span>
+                    </button>
+                    <button id="choice-2" type="button" class="choice-btn" data-choice="2">
+                        <span class="choice-letter">C:</span>
+                        <span id="choice-text-2" class="choice-label">選択肢C</span>
+                    </button>
+                    <button id="choice-3" type="button" class="choice-btn" data-choice="3">
+                        <span class="choice-letter">D:</span>
+                        <span id="choice-text-3" class="choice-label">選択肢D</span>
+                    </button>
+                </div>
+
+                <div class="bottom-controls">
+                    <button id="btn-quit-game" type="button" class="btn-quit">← コース<ruby>選択<rt>せんたく</rt></ruby>にもどる</button>
+                    <button id="btn-dropout" type="button" class="btn-dropout hidden">
+                        💼 ドロップアウト（<ruby>今<rt>いま</rt></ruby>の<ruby>賞金<rt>しょうきん</rt></ruby>をかくてい）
+                    </button>
+                </div>
+            </div>
+
+            <aside class="tv-panel ladder-panel">
+                <div class="ladder-title">PRIZE LADDER / <ruby>賞金<rt>しょうきん</rt></ruby>リスト</div>
+                <ul id="prize-ladder" class="ladder-list"></ul>
+            </aside>
+        </section>
+
+        <!-- 3. リザルト画面 -->
+        <section id="screen-result" class="hidden tv-panel result-box">
+            <div id="result-icon" class="result-icon">🏆</div>
+            <div id="result-course-badge" class="pill-badge">1<ruby>年生<rt>ねんせい</rt></ruby>コース けっか</div>
+            <h2 id="result-title" class="result-title">チャレンジしゅうりょう！</h2>
+            <p id="result-desc" class="result-desc">おつかれさまでした！</p>
+
+            <div class="prize-summary-card">
+                <div style="font-size:12px; color:#94a3b8; font-weight:800;">かくとく<ruby>賞金<rt>しょうきん</rt></ruby></div>
+                <div id="result-prize" class="prize-summary-val">0<ruby>円<rt>えん</rt></ruby></div>
+                <div id="result-correct-count" class="prize-summary-sub">せいかい<ruby>数<rt>すう</rt></ruby>：0<ruby>問<rt>もん</rt></ruby> / 10<ruby>問<rt>もん</rt></ruby></div>
+            </div>
+
+            <div id="score-register-box" class="register-card">
+                <div style="font-size:13px; font-weight:800; color:#bae6fd;">📝 ランキングにきろくをのこそう！</div>
+                <div class="register-row">
+                    <input id="input-nickname" class="input-nick" type="text" maxlength="10" placeholder="チャレンジャー">
+                    <button id="btn-register-score" type="button" class="btn-primary">ランキングに<ruby>登録<rt>とうろく</rt></ruby>！</button>
+                </div>
+            </div>
+
+            <div class="result-actions">
+                <button id="btn-play-again" type="button" class="btn-primary">🔄 もういちど<ruby>遊<rt>あそ</rt></ruby>ぶ</button>
+                <button id="btn-open-ranking-result" type="button" class="btn-secondary">🏆 ランキングを<ruby>見<rt>み</rt></ruby>る</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- モーダル1：ファイナルアンサー確認 -->
+    <div id="modal-final" class="hidden modal-backdrop">
+        <div class="tv-panel modal-card" style="border-color:#fb923c;">
+            <div style="font-size:12px; font-weight:900; color:#fb923c; letter-spacing:0.12em;">FINAL ANSWER?</div>
+            <h3 style="font-size:26px; font-weight:900; margin:6px 0 12px;">ファイナルアンサー？</h3>
+            <div id="final-choice-preview" style="background:#020617; border:1px solid #334155; border-radius:12px; padding:12px; font-size:17px; font-weight:900; color:#fde047; margin-bottom:18px;">
+                A: 選択肢
+            </div>
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                <button id="btn-final-yes" type="button" class="btn-primary" style="font-size:16px; padding:13px 22px;">🔥 ファイナルアンサー！</button>
+                <button id="btn-final-no" type="button" class="btn-secondary"><ruby>考<rt>かんが</rt></ruby>え<ruby>直<rt>なお</rt></ruby>す</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- モーダル2：ライフライン・確認ダイアログ -->
+    <div id="modal-info" class="hidden modal-backdrop">
+        <div class="tv-panel modal-card">
+            <div id="info-icon" style="font-size:44px; margin-bottom:8px;">📞</div>
+            <h3 id="info-title" style="font-size:20px; font-weight:900; color:#facc15; margin-bottom:10px;">テレフォン</h3>
+            <div id="info-body" style="font-size:14px; line-height:1.65; margin-bottom:18px;"></div>
+            <div id="info-buttons" style="display:flex; gap:10px; justify-content:center;"></div>
+        </div>
+    </div>
+
+    <!-- モーダル3：全8コース別 TOP 5 ランキング -->
+    <div id="modal-ranking" class="hidden modal-backdrop">
+        <div class="tv-panel modal-card modal-wide">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                <h3 style="font-size:19px; font-weight:900; color:#facc15;">🏆 コース<ruby>別<rt>べつ</rt></ruby>ランキング TOP 5</h3>
+                <button id="btn-close-ranking-top" type="button" class="btn-secondary" style="padding:5px 11px; border-radius:999px;">✕</button>
+            </div>
+
+            <div class="rank-tabs">
+                <button type="button" class="rank-tab-btn" data-rank-tab="1">1<ruby>年生<rt>ねんせい</rt></ruby></button>
+                <button type="button" class="rank-tab-btn" data-rank-tab="2">2<ruby>年生<rt>ねんせい</rt></ruby></button>
+                <button type="button" class="rank-tab-btn" data-rank-tab="3">3<ruby>年生<rt>ねんせい</rt></ruby></button>
+                <button type="button" class="rank-tab-btn" data-rank-tab="4">4<ruby>年生<rt>ねんせい</rt></ruby></button>
+                <button type="button" class="rank-tab-btn" data-rank-tab="5">5<ruby>年生<rt>ねんせい</rt></ruby></button>
+                <button type="button" class="rank-tab-btn" data-rank-tab="6">6<ruby>年生<rt>ねんせい</rt></ruby></button>
+                <button type="button" class="rank-tab-btn tab-vivant" data-rank-tab="vivant">VIVANT</button>
+                <button type="button" class="rank-tab-btn tab-udai" data-rank-tab="udai"><ruby>宇大附属小<rt>うだいふぞくしょう</rt></ruby></button>
+            </div>
+
+            <div class="rank-table-wrap">
+                <table class="rank-table">
+                    <thead>
+                        <tr>
+                            <th style="width:56px; text-align:center;"><ruby>順位<rt>じゅんい</rt></ruby></th>
+                            <th>ニックネーム</th>
+                            <th style="text-align:right;"><ruby>賞金<rt>しょうきん</rt></ruby></th>
+                            <th style="width:68px; text-align:center;"><ruby>正解<rt>せいかい</rt></ruby></th>
+                        </tr>
+                    </thead>
+                    <tbody id="ranking-tbody"></tbody>
+                </table>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                <button id="btn-reset-rank" type="button" class="btn-secondary" style="font-size:12px; color:#fca5a5; border-color:rgba(239,68,68,0.45);">
+                    このコースの<ruby>記録<rt>きろく</rt></ruby>を<ruby>消<rt>け</rt></ruby>す
+                </button>
+                <button id="btn-close-ranking-bottom" type="button" class="btn-primary">とじる</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            // ==========================================
+            // 1. 安全なストレージ（localStorage制限環境でも動作）
+            // ==========================================
+            const memoryStorage = {};
+
+            function safeGetStorage(key) {
+                try {
+                    const val = window.localStorage.getItem(key);
+                    if (val !== null) return val;
+                } catch (e) {
+                    // サンドボックス環境ではメモリフォールバックを使用
+                }
+                return Object.prototype.hasOwnProperty.call(memoryStorage, key) ? memoryStorage[key] : null;
+            }
+
+            function safeSetStorage(key, value) {
+                memoryStorage[key] = value;
+                try {
+                    window.localStorage.setItem(key, value);
+                } catch (e) {
+                    // ignore
+                }
+            }
+
+            // ==========================================
+            // 2. ふりがな（ルビ）自動変換エンジン
+            // ==========================================
+            let furiganaEnabled = true;
+
+            const RUBY_DICT = [
+                ['宇都宮大学共同教育学部附属小学校', 'うつのみやだいがくきょうどうきょういくがくぶふぞくしょうがっこう'],
+                ['宇都宮大学附属小学校', 'うつのみやだいがくふぞくしょうがっこう'],
+                ['排他的経済水域', 'はいたてきけいざいすいいき'],
+                ['基本的人権の尊重', 'きほんてきじんけんのそんちょう'],
+                ['大日本帝国憲法', 'だいにほんていこくけんぽう'],
+                ['十七条の憲法', 'じゅうしちじょうのけんぽう'],
+                ['青色リトマス紙', 'あおいろりとますし'],
+                ['最高裁判所', 'さいこうさいばんしょ'],
+                ['警視庁公安部', 'けいしちょうこうあんぶ'],
+                ['秘密情報部隊', 'ひみつじょうほうぶたい'],
+                ['日本国憲法', 'にほんこくけんぽう'],
+                ['国語辞典', 'こくごじてん'],
+                ['縄文時代', 'じょうもんじだい'],
+                ['弥生時代', 'やよいじだい'],
+                ['鎌倉幕府', 'かまくらばくふ'],
+                ['江戸幕府', 'えどばくふ'],
+                ['明治政府', 'めいじせいふ'],
+                ['国際連合', 'こくさいれんごう'],
+                ['促成栽培', 'そくせいさいばい'],
+                ['都道府県', 'とどうふけん'],
+                ['県庁所在地', 'けんちょうしょざいち'],
+                ['沖ノ鳥島', 'おきのとりしま'],
+                ['二酸化炭素', 'にさんかたんそ'],
+                ['廃藩置県', 'はいはんちけん'],
+                ['三権分立', 'さんけんぶんりつ'],
+                ['国民主権', 'こくみんしゅけん'],
+                ['平和主義', 'へいわしゅぎ'],
+                ['衆議院', 'しゅうぎいん'],
+                ['参議院', 'さんぎいん'],
+                ['聖徳太子', 'しょうとくたいし'],
+                ['源頼朝', 'みなもとのよりとも'],
+                ['徳川家康', 'とくがわいえやす'],
+                ['織田信長', 'おだのぶなが'],
+                ['豊臣秀吉', 'とよとみひでよし'],
+                ['東大寺', 'とうだいじ'],
+                ['琵琶湖', 'びわこ'],
+                ['富士山', 'ふじさん'],
+                ['豊田市', 'とよたし'],
+                ['宇都宮市', 'うつのみやし'],
+                ['宇都宮大学', 'うつのみやだいがく'],
+                ['宇大附属小', 'うだいふぞくしょう'],
+                ['附属小学校', 'ふぞくしょうがっこう'],
+                ['松原', 'まつばら'],
+                ['低学年', 'ていがくねん'],
+                ['中学年', 'ちゅうがくねん'],
+                ['高学年', 'こうがくねん'],
+                ['最高学年', 'さいこうがくねん'],
+                ['各学年', 'かくがくねん'],
+                ['第7学年', 'だいなながくねん'],
+                ['副担任', 'ふくたんにん'],
+                ['副校長', 'ふくこうちょう'],
+                ['校長先生', 'こうちょうせんせい'],
+                ['校長', 'こうちょう'],
+                ['養護教諭', 'ようごきょうゆ'],
+                ['栄養教諭', 'えいようきょうゆ'],
+                ['栄養士', 'えいようし'],
+                ['事務職員', 'じむしょくいん'],
+                ['合言葉', 'あいことば'],
+                ['大所帯', 'おおじょたい'],
+                ['所在地', 'しょざいち'],
+                ['学級数', 'がっきゅうすう'],
+                ['教育実習', 'きょういくじっしゅう'],
+                ['公開研究会', 'こうかいけんきゅうかい'],
+                ['宿泊学習', 'しゅくはくがくしゅう'],
+                ['探究活動', 'たんきゅうかつどう'],
+                ['総合的な学習の時間', 'そうごうてきながくしゅうのじかん'],
+                ['外国語活動', 'がいこくごかつどう'],
+                ['別班', 'べっぱん'],
+                ['乃木憂助', 'のぎゆうすけ'],
+                ['野崎守', 'のざきまもる'],
+                ['黒須駿', 'くろすしゅん'],
+                ['共和国', 'きょうわこく'],
+                ['丸菱商事', 'まるびししょうじ'],
+                ['誤送金', 'ごそうきん'],
+                ['お赤飯', 'おせきはん'],
+                ['翻訳機', 'ほんやくき'],
+                ['自衛隊', 'じえいたい'],
+                ['モンゴル', 'もんごる'],
+                ['名場面', 'めいばめん'],
+                ['極秘任務', 'ごくひにんむ'],
+                ['太陽系', 'たいようけい'],
+                ['光合成', 'こうごうせい'],
+                ['食塩水', 'しょくえんすい'],
+                ['水溶液', 'すいようえき'],
+                ['平行四辺形', 'へいこうしへんけい'],
+                ['正三角形', 'せいさんかくけい'],
+                ['直角', 'ちょっかく'],
+                ['面積', 'めんせき'],
+                ['割合', 'わりあい'],
+                ['分母', 'ぶんぼ'],
+                ['分子', 'ぶんし'],
+                ['小数', 'しょうすう'],
+                ['分数', 'ぶんすう'],
+                ['漢字', 'かんじ'],
+                ['画数', 'かくすう'],
+                ['部首', 'ぶしゅ'],
+                ['熟語', 'じゅくご'],
+                ['ことわざ', 'ことわざ'],
+                ['慣用句', 'かんようく'],
+                ['季節', 'きせつ'],
+                ['昆虫', 'こんちゅう'],
+                ['植物', 'しょくぶつ'],
+                ['動物', 'どうぶつ'],
+                ['地球', 'ちきゅう'],
+                ['太陽', 'たいよう'],
+                ['磁石', 'じしゃく'],
+                ['電池', 'でんち'],
+                ['電流', 'でんりゅう'],
+                ['天気', 'てんき'],
+                ['温度', 'おんど'],
+                ['都道府県', 'とどうふけん'],
+                ['日本海', 'にほんかい'],
+                ['太平洋', 'たいへいよう'],
+                ['北海道', 'ほっかいどう'],
+                ['沖縄県', 'おきなわけん'],
+                ['栃木県', 'とちぎけん'],
+                ['東京都', 'とうきょうと'],
+                ['愛知県', 'あいちけん'],
+                ['滋賀県', 'しがけん'],
+                ['静岡県', 'しずおかけん'],
+                ['山梨県', 'やまなしけん'],
+                ['歴史', 'れきし'],
+                ['政治', 'せいじ'],
+                ['選挙', 'せんきょ'],
+                ['税金', 'ぜいきん'],
+                ['産業', 'さんぎょう'],
+                ['農業', 'のうぎょう'],
+                ['工業', 'こうぎょう'],
+                ['貿易', 'ぼうえき'],
+                ['環境', 'かんきょう'],
+                ['人体', 'じんたい'],
+                ['心臓', 'しんぞう'],
+                ['血液', 'けつえき'],
+                ['呼吸', 'こきゅう'],
+                ['消化', 'しょうか'],
+                ['賞金', 'しょうきん'],
+                ['正解', 'せいかい'],
+                ['不正解', 'ふせいかい'],
+                ['問題', 'もんだい'],
+                ['選択肢', 'せんたくし'],
+                ['挑戦', 'ちょうせん'],
+                ['獲得', 'かくとく'],
+                ['確定', 'かくてい'],
+                ['登録', 'とうろく'],
+                ['記録', 'きろく'],
+                ['消去', 'しょうきょ'],
+                ['順位', 'じゅんい'],
+                ['投票', 'とうひょう'],
+                ['結果', 'けっか'],
+                ['連続', 'れんぞく'],
+                ['制覇', 'せいは'],
+                ['達成', 'たっせい'],
+                ['発表', 'はっぴょう'],
+                ['質問', 'しつもん'],
+                ['理由', 'りゆう'],
+                ['意味', 'いみ'],
+                ['特徴', 'とくちょう'],
+                ['名前', 'なまえ'],
+                ['場所', 'ばしょ'],
+                ['時間', 'じかん'],
+                ['数字', 'すうじ'],
+                ['計算', 'けいさん'],
+                ['答え', 'こたえ'],
+                ['仲間', 'なかま'],
+                ['友達', 'ともだち'],
+                ['先生', 'せんせい'],
+                ['学校', 'がっこう'],
+                ['授業', 'じゅぎょう'],
+                ['給食', 'きゅうしょく'],
+                ['掃除', 'そうじ'],
+                ['運動', 'うんどう'],
+                ['音楽', 'おんがく'],
+                ['図工', 'ずこう'],
+                ['理科', 'りか'],
+                ['社会', 'しゃかい'],
+                ['算数', 'さんすう'],
+                ['国語', 'こくご'],
+                ['生活', 'せいかつ'],
+                ['家庭科', 'かていか'],
+                ['体育', 'たいいく'],
+                ['道徳', 'どうとく'],
+                ['学年', 'がくねん'],
+                ['教室', 'きょうしつ'],
+                ['校庭', 'こうてい'],
+                ['体育館', 'たいいくかん'],
+                ['図書館', 'としょかん'],
+                ['保健室', 'ほけんしつ'],
+                ['職員室', 'しょくいんしつ'],
+                ['校長室', 'こうちょうしつ'],
+                ['1年生', '1ねんせい'],
+                ['2年生', '2ねんせい'],
+                ['3年生', '3ねんせい'],
+                ['4年生', '4ねんせい'],
+                ['5年生', '5ねんせい'],
+                ['6年生', '6ねんせい'],
+                ['1組', '1くみ'],
+                ['2組', '2くみ'],
+                ['3組', '3くみ'],
+                ['万円', 'まんえん'],
+                ['円', 'えん'],
+                ['問', 'もん'],
+                ['秒', 'びょう'],
+                ['位', 'い']
+            ];
+
+            function escapeHtml(str) {
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            }
+
+            // プレースホルダー置換方式で安全に<ruby>タグを付与する
+            function applyRuby(plainText) {
+                let text = escapeHtml(plainText);
+                const tokens = [];
+                for (let i = 0; i < RUBY_DICT.length; i++) {
+                    const [kanji, reading] = RUBY_DICT[i];
+                    if (text.indexOf(kanji) !== -1) {
+                        const token = `@@RUBY_${tokens.length}@@`;
+                        tokens.push(`<ruby>${kanji}<rt>${reading}</rt></ruby>`);
+                        text = text.split(kanji).join(token);
+                    }
+                }
+                for (let i = 0; i < tokens.length; i++) {
+                    text = text.split(`@@RUBY_${i}@@`).join(tokens[i]);
+                }
+                return text;
+            }
+
+            // ==========================================
+            // 3. Web Audio API スタジオ音響エンジン
+            // ==========================================
+            let audioCtx = null;
+            let soundEnabled = true;
+            let heartbeatTimer = null;
+
+            function initAudio() {
+                if (!audioCtx) {
+                    const Ctx = window.AudioContext || window.webkitAudioContext;
+                    if (Ctx) {
+                        audioCtx = new Ctx();
+                    }
+                }
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(() => {});
+                }
+            }
+
+            function playTone(freq, type, duration, gainVal, delay = 0) {
+                if (!soundEnabled) return;
+                initAudio();
+                if (!audioCtx) return;
+
+                try {
+                    const now = audioCtx.currentTime + delay;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, now);
+
+                    gain.gain.setValueAtTime(0.0001, now);
+                    gain.gain.exponentialRampToValueAtTime(gainVal, now + 0.015);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + duration + 0.02);
+                } catch (e) {
+                    // ignore audio errors
+                }
+            }
+
+            function playSFX(kind) {
+                if (!soundEnabled) return;
+                if (kind === 'click') {
+                    playTone(620, 'sine', 0.08, 0.12);
+                } else if (kind === 'select') {
+                    playTone(440, 'triangle', 0.12, 0.16, 0);
+                    playTone(587.33, 'triangle', 0.18, 0.16, 0.08);
+                } else if (kind === 'chime') {
+                    playTone(987.77, 'sine', 0.14, 0.16, 0);
+                    playTone(1318.51, 'sine', 0.28, 0.16, 0.12);
+                } else if (kind === 'correct') {
+                    playTone(523.25, 'triangle', 0.16, 0.2, 0);
+                    playTone(659.25, 'triangle', 0.16, 0.2, 0.11);
+                    playTone(783.99, 'triangle', 0.16, 0.2, 0.22);
+                    playTone(1046.5, 'triangle', 0.42, 0.22, 0.33);
+                } else if (kind === 'wrong') {
+                    playTone(185, 'sawtooth', 0.28, 0.18, 0);
+                    playTone(138.59, 'sawtooth', 0.55, 0.2, 0.24);
+                } else if (kind === 'millionaire') {
+                    const notes = [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5];
+                    notes.forEach((n, idx) => {
+                        playTone(n, 'triangle', idx === notes.length - 1 ? 0.65 : 0.15, 0.22, idx * 0.13);
+                    });
+                }
+            }
+
+            function startHeartbeat() {
+                stopHeartbeat();
+                const beat = () => {
+                    playTone(68, 'sine', 0.14, 0.26, 0);
+                    playTone(56, 'sine', 0.16, 0.22, 0.17);
+                };
+                beat();
+                heartbeatTimer = setInterval(beat, 760);
+            }
+
+            function stopHeartbeat() {
+                if (heartbeatTimer) {
+                    clearInterval(heartbeatTimer);
+                    heartbeatTimer = null;
+                }
+            }
+
+            // ==========================================
+            // 4. コース設定＆賞金ピラミッド＆全120問データ
+            // ==========================================
+            const PRIZE_LADDER = [
+                { step: 1, value: 10000, label: '1万円', safety: false },
+                { step: 2, value: 30000, label: '3万円', safety: false },
+                { step: 3, value: 50000, label: '5万円', safety: false },
+                { step: 4, value: 100000, label: '10万円', safety: false },
+                { step: 5, value: 200000, label: '20万円', safety: true },
+                { step: 6, value: 500000, label: '50万円', safety: false },
+                { step: 7, value: 1000000, label: '100万円', safety: false },
+                { step: 8, value: 2500000, label: '250万円', safety: true },
+                { step: 9, value: 5000000, label: '500万円', safety: false },
+                { step: 10, value: 10000000, label: '1,000万円', safety: true }
+            ];
+
+            const COURSE_META = {
+                '1': { name: '1年生コース', shortName: '1年生', time: 45, theme: 'default' },
+                '2': { name: '2年生コース', shortName: '2年生', time: 45, theme: 'default' },
+                '3': { name: '3年生コース', shortName: '3年生', time: 35, theme: 'default' },
+                '4': { name: '4年生コース', shortName: '4年生', time: 35, theme: 'default' },
+                '5': { name: '5年生コース', shortName: '5年生', time: 30, theme: 'default' },
+                '6': { name: '6年生コース', shortName: '6年生', time: 30, theme: 'default' },
+                'vivant': { name: '番外編：ドラマ VIVANT', shortName: 'VIVANT', time: 30, theme: 'vivant' },
+                'udai': { name: '番外編：宇都宮大学附属小学校', shortName: '宇大附属小', time: 35, theme: 'udai' }
+            };
+
+            const QUIZ_DATABASE = {
+                '1': [
+                    { cat: 'さんすう', q: 'りんごが 3こ、みかんが 4こ あります。あわせて なんこ？', c: ['6こ', '7こ', '8こ', '9こ'], a: 1, hint: '3 ＋ 4 を ゆびで かぞえてみよう！' },
+                    { cat: 'こくご', q: '「やま」と はんたいの いみの ことばは どれ？', c: ['かわ', 'うみ', 'そら', 'もり'], a: 1, hint: '「やま」の 反対は 「う〇」だよ！' },
+                    { cat: 'せいかつ', q: 'あさがおの たねを まく きせつは いつ？', c: ['はる', 'なつ', 'あき', 'ふゆ'], a: 0, hint: '1年生に なって すぐの あたたかい 季節だよ！' },
+                    { cat: 'さんすう', q: '10より 2 おおきい かずは いくつ？', c: ['8', '11', '12', '20'], a: 2, hint: '10 ＋ 2 を けいさんしてみよう！' },
+                    { cat: 'どうぶつ', q: 'うさぎの みみは どうして ながいの？', c: ['そらを とぶため', 'てきの おとを きくため', 'およぐため', 'かざりのため'], a: 1, hint: 'とおくの 小さな おとも よく きこえるように なっているよ！' },
+                    { cat: 'さんすう', q: 'とけいの ながい はりが 12、みじかい はりが 3 を さしているとき なんじ？', c: ['12じ', '3じ', '6じ', '9じ'], a: 1, hint: 'みじかい はりが さしている 数字を よもう！' },
+                    { cat: 'こくご', q: '「一」「二」「三」の つぎの かんじは どれ？', c: ['五', '四', '六', '十'], a: 1, hint: 'よん（し）を あらわす 漢字だよ！' },
+                    { cat: 'せいかつ', q: 'しんごうが 「あお」に なったとき、わたる まえに なにをする？', c: ['めを とじる', 'みぎ と ひだりを みる', 'うしろを むく', 'ジャンプする'], a: 1, hint: 'くるまが きていないか 安全かくにんを するよ！' },
+                    { cat: 'さんすう', q: '15 － 6 の こたえは いくつ？', c: ['7', '8', '9', '10'], a: 2, hint: '10から 6を ひくと 4。それに 5を たすと…？' },
+                    { cat: 'こくご', q: '「おはよう」と あいさつするのは 1にちの うち いつ？', c: ['あさ', 'ひる', 'ゆうがた', 'よる'], a: 0, hint: 'おきて すぐの げんきな あいさつだよ！' },
+                    { cat: 'さんすう', q: 'サイコロの かたちは どんな かたち？', c: ['まるい ボール', 'しかくい はこ', 'さんかくの やま', 'つつのかたち'], a: 1, hint: '6つの ましかくな めんが ある はこの かたちだよ！' },
+                    { cat: 'せいかつ', q: 'むしめがねで みては いけない ものは どれ？', c: ['はっぱ', 'あり', 'たいよう', 'いし'], a: 2, hint: 'めを いためるので ぜったいに みては いけないよ！' },
+                    { cat: 'こくご', q: '「きつね」の なかまの どうぶつは どれ？', c: ['たぬき', 'くじら', 'かえる', 'すずめ'], a: 0, hint: 'おとぎばなしにも よく でてくる 森の どうぶつだよ！' },
+                    { cat: 'さんすう', q: '10えん 玉が 5まい あります。ぜんぶで いくら？', c: ['15えん', '30えん', '50えん', '100えん'], a: 2, hint: '10が 5つ あつまると いくつに なるかな？' },
+                    { cat: 'おんがく', q: '「ド・レ・ミ・ファ・ソ・ラ・シ」の つぎは なに？', c: ['ド', 'レ', 'ミ', 'ファ'], a: 0, hint: '1オクターブ うえの さいしょの おとに もどるよ！' }
+                ],
+                '2': [
+                    { cat: '算数', q: 'かけ算九九で「7 × 8」の こたえは いくつ？', c: ['54', '56', '63', '64'], a: 1, hint: '「しちは ごじゅうろく」だよ！' },
+                    { cat: '生活', q: 'ヤゴが せいちょうして なる 昆虫は どれ？', c: ['カブトムシ', 'トンボ', 'バッタ', 'チョウ'], a: 1, hint: '水の中で くらす ヤゴは、やがて 空を とぶ あの 虫になるよ！' },
+                    { cat: '国語', q: '「東」の 反対の 方角を あらわす 漢字は どれ？', c: ['西', '南', '北', '中'], a: 0, hint: '太陽が のぼるのが 東、しずむのが 〇〇だよ！' },
+                    { cat: '算数', q: '1時間は なん分？', c: ['30分', '50分', '60分', '100分'], a: 2, hint: 'とけいの ながい はりが 1しゅうすると 60分だよ！' },
+                    { cat: '算数', q: '100cm（センチメートル）は なんm（メートル）？', c: ['1m', '10m', '100m', '1000m'], a: 0, hint: 'りょう手を ひろげたくらいの 長さが 1m だよ！' },
+                    { cat: '生活', q: 'ミニトマトの 花は なに色？', c: ['あか色', 'き色', 'しろ色', 'むらさき色'], a: 1, hint: '実は 赤くなるけれど、花は 明るい 〇〇色だよ！' },
+                    { cat: '国語', q: '「はる・なつ・あき・ふゆ」の 4つを まとめて なんという？', c: ['きせつ', 'ほうこう', 'てんき', 'じかん'], a: 0, hint: '日本の 四つの 〇〇（四季）だよ！' },
+                    { cat: '算数', q: '三角形には ちょうてん（かど）が いくつ ある？', c: ['2つ', '3つ', '4つ', '5つ'], a: 1, hint: '「さん」かくけい だから かども 3つ あるよ！' },
+                    { cat: '生活', q: '町たんけんで おみせの 人に 質問するとき 大切なことは？', c: ['おおごえで さけぶ', 'あいさつと おれいを いう', 'かってに さわる', 'だまって かえる'], a: 1, hint: 'れいぎ ただしく おはなしを きこう！' },
+                    { cat: '算数', q: '9 × 9 の こたえは いくつ？', c: ['72', '80', '81', '90'], a: 2, hint: '九九の いちばん さいご、「くく はちじゅういち」だよ！' },
+                    { cat: '国語', q: '「犬も 歩けば 〇〇に あたる」の 〇〇は なに？', c: ['ねこ', 'ぼう', 'いし', 'き'], a: 1, hint: 'なにかを すれば 思わぬ ことに 出会うという ことわざだよ！' },
+                    { cat: '算数', q: '1000より 1 ちいさい かずは いくつ？', c: ['900', '990', '999', '1001'], a: 2, hint: '9が 3つ ならぶ かずだよ！' },
+                    { cat: '生活', q: '郵便ポストの 色は なに色？', c: ['あお色', 'あか色', 'みどり色', 'き色'], a: 1, hint: 'てがみを いれる ポストは 目立つ 〇〇色！' },
+                    { cat: '算数', q: '1L（リットル）は なんdL（デシリットル）？', c: ['1dL', '10dL', '100dL', '1000dL'], a: 1, hint: '1Lの ますには 1dLの コップ 10ぱいぶん 入るよ！' },
+                    { cat: '国語', q: '「大きい」の 反対の いみの ことばは どれ？', c: ['高い', '小さい', '長い', '重い'], a: 1, hint: '大きいの 反対は 「〇〇い」だよ！' }
+                ],
+                '3': [
+                    { cat: '理科', q: '昆虫の 体は「頭・むね」と あと 1つ なにに 分かれている？', c: ['しっぽ', 'はら', 'つばさ', 'うで'], a: 1, hint: '「あたま・むね・〇〇」の 3つに 分かれ、あしは 6本あるよ！' },
+                    { cat: '社会', q: '地図記号で「〒」の マークが あらわす 場所は どこ？', c: ['学校', '病院', '郵便局', '交番'], a: 2, hint: '手紙や ハガキを だす ところだよ！' },
+                    { cat: '理科', q: '磁石の N極と S極を 近づけると どうなる？', c: ['しりぞけあう', 'ひきつけあう', 'なにも おきない', 'とける'], a: 1, hint: 'ちがう 極どうしは ピタッと くっつくよ！' },
+                    { cat: '算数', q: '1km（キロメートル）は なんm（メートル）？', c: ['10m', '100m', '1000m', '10000m'], a: 2, hint: '「キロ」は 1000倍を あらわすよ！' },
+                    { cat: '国語', q: '国語辞典で ことばが ならんでいる じゅんばんは どれ？', c: ['五十音順', '画数順', 'ABC順', 'ながい順'], a: 0, hint: '「あ・い・う・え・お」の じゅんばんだよ！' },
+                    { cat: '理科', q: '太陽が のぼる 方角は どっち？', c: ['東', '西', '南', '北'], a: 0, hint: '朝、太陽は 〇〇の 空から のぼってくるよ！' },
+                    { cat: '社会', q: '火事のとき、119番に 電話すると かけつけてくれるのは どこ？', c: ['警察署', '消防署', '市役所', '図書館'], a: 1, hint: '消防車で 火を けしに きてくれる ところだよ！' },
+                    { cat: '算数', q: '円の 中心から まわり（円周）まで ひいた 直線の 長さを なんという？', c: ['直径', '半径', '対角線', '辺'], a: 1, hint: '直径の はんぶんの 長さだから 「〇〇」だよ！' },
+                    { cat: '理科', q: 'モンシロチョウが 卵から かえった すぐの すがたを なんという？', c: ['さなぎ', 'ようちゅう（あおむし）', 'せいちゅう', 'ヤゴ'], a: 1, hint: 'キャベツの 葉っぱを たくさん 食べる みどり色の 虫だよ！' },
+                    { cat: '社会', q: '地図記号で「文」という 漢字に 似た マークは なにを あらわす？', c: ['小・中学校', '神社', 'お寺', '工場'], a: 0, hint: 'みんなが 勉強する 〇〇の マークだよ！' },
+                    { cat: '算数', q: '24 ÷ 4 の こたえは いくつ？', c: ['5', '6', '7', '8'], a: 1, hint: '4 × □ ＝ 24 に なる 数字を 考えよう！' },
+                    { cat: '理科', q: '豆電球が つくのは、電池の ＋極と －極を どう つないだとき？', c: ['わっか（回路）につなぐ', '＋極だけにつなぐ', '－極だけにつなぐ', 'つながない'], a: 0, hint: '電気が ぐるっと 一周する 通り道（回路）を つくると 光るよ！' },
+                    { cat: '国語', q: '「猿も 木から 〇〇」の 〇〇に 入る ことばは？', c: ['おちる', 'のぼる', 'とぶ', 'みる'], a: 0, hint: '木登りが じょうずな 猿でも 失敗することがあるという ことわざだよ！' },
+                    { cat: '社会', q: '昔、電気や ガスが なかったころ、ごはんを たくのに つかった 道具は？', c: ['電子レンジ', 'かまど', 'トースター', '冷蔵庫'], a: 1, hint: 'まきを 燃やして 大きな 羽釜で ごはんを たいたよ！' },
+                    { cat: '算数', q: '1000g（グラム）は なんkg（キログラム）？', c: ['1kg', '10kg', '100kg', '1000kg'], a: 0, hint: '1000g ＝ 1〇〇 だよ！' }
+                ],
+                '4': [
+                    { cat: '社会', q: '日本で いちばん 面積が 広い 都道府県は どこ？', c: ['岩手県', '長野県', '北海道', '新潟県'], a: 2, hint: '日本の いちばん 北にある 大きな 島だよ！' },
+                    { cat: '理科', q: '夏の大三角をつくる 3つの 星は「ベガ・アルタイル」と あと 1つは なに？', c: ['シリウス', 'デネブ', 'ポラリス', 'リゲル'], a: 1, hint: 'はくちょう座の 1等星 「デ〇〇」だよ！' },
+                    { cat: '社会', q: '日本で いちばん 面積が 小さい 都道府県は どこ？', c: ['大阪府', '東京都', '香川県', '沖縄県'], a: 2, hint: '四国にある、さぬきうどんで 有名な 県だよ！' },
+                    { cat: '算数', q: '180度より 小さく、90度より 大きい 角を なんという？', c: ['鋭角', '直角', '鈍角', '平角'], a: 2, hint: '90度は 直角、それより 大きく 開いた 角は 「どんかく」だよ！' },
+                    { cat: '理科', q: '水を 冷やして 氷に なるときの 温度は なん度？', c: ['100度', '50度', '10度', '0度'], a: 3, hint: 'ふっとうするのは 100度、こおりはじめるのは 〇度だよ！' },
+                    { cat: '社会', q: '滋賀県にある、日本で いちばん 大きな 湖は なに？', c: ['霞ヶ浦', '琵琶湖', 'サロマ湖', '猪苗代湖'], a: 1, hint: '楽器の 「びわ」に 形が 似ていることから 名づけられたよ！' },
+                    { cat: '理科', q: '空気を あたためると、体積（かさ）は どうなる？', c: ['大きくなる', '小さくなる', 'かわらない', 'なくなる'], a: 0, hint: 'あたたまると 空気は ふくらんで 軽くなるよ！' },
+                    { cat: '算数', q: '4つの 辺の 長さが すべて 等しく、4つの 角が すべて 直角の 四角形は？', c: ['長方形', 'ひし形', '正方形', '台形'], a: 2, hint: 'サイコロの 1つの 面と おなじ 形だよ！' },
+                    { cat: '社会', q: '日本一 高い 山「富士山」は、静岡県と 何県の さかいに ある？', c: ['神奈川県', '長野県', '山梨県', '岐阜県'], a: 2, hint: '富士五湖が ある 「やまなしけん」だよ！' },
+                    { cat: '理科', q: '電池 2こを「直列つなぎ」にすると、豆電球の 明るさは どうなる？', c: ['1このときより 明るくなる', '1このときより 暗くなる', '1このときと かわらない', 'つかなくなる'], a: 0, hint: 'パワーが 2倍に なって とても 明るく 光るよ！' },
+                    { cat: '国語', q: '漢字の「木」「林」「森」のうち、画数が いちばん 多いのは どれ？', c: ['木', '林', '森', 'どれも同じ'], a: 2, hint: '木が 3つ あつまった 「森」は 12画あるよ！' },
+                    { cat: '社会', q: '愛知県 豊田市などで さかんな、日本の 代表的な 工業は なに？', c: ['自動車工業', '造船業', '林業', '漁業'], a: 0, hint: 'トヨタ自動車の 本社がある 町として 有名だよ！' },
+                    { cat: '理科', q: '満月から 次の 満月まで、月の 形が 一周するのに かかる 日数は 約なん日？', c: ['約7日', '約15日', '約30日', '約365日'], a: 2, hint: '「1か月（約30日）」かけて 満ち欠けを くりかえすよ！' },
+                    { cat: '算数', q: '平行四辺形の 向かい合う 辺の 関係は どうなっている？', c: ['平行で 長さが 等しい', '垂直に まじわる', '長さが ぜんぶ ちがう', '円になっている'], a: 0, hint: '向かい合う 2組の 辺が それぞれ 平行だよ！' },
+                    { cat: '社会', q: '高知県などで さかんな、ビニールハウスを つかって 野菜を 早く 出荷する 農業は？', c: ['促成栽培', '抑制栽培', '焼畑農業', '酪農'], a: 0, hint: 'あたたかい 気候を いかして 成長を うながす（促成）栽培だよ！' }
+                ],
+                '5': [
+                    { cat: '社会', q: '日本の 国土の うち、約3分の2を しめている 地形は どれ？', c: ['平野', '森林・山地', '砂漠', '湖'], a: 1, hint: '日本は 山や 森が とても 多い 国だよ！' },
+                    { cat: '算数', q: '200円の 30％引き（3割引き）は いくらに なる？', c: ['60円', '140円', '170円', '180円'], a: 1, hint: '200円の 30％は 60円。200円から 60円を ひくと…？' },
+                    { cat: '理科', q: '植物が 発芽するために 必要な 3つの 条件は「水・空気」と あと 1つは？', c: ['肥料', '日光', 'てきとうな温度', '土'], a: 2, hint: '種の中の 養分で 発芽するので、日光や 肥料は まだ いらないよ！' },
+                    { cat: '社会', q: '日本の いちばん 南にある 島（東京都 小笠原諸島）の 名前は？', c: ['択捉島', '南鳥島', '沖ノ鳥島', '与那国島'], a: 2, hint: '日本の 排他的経済水域を まもる 大切な 島 「おきのとりしま」だよ！' },
+                    { cat: '理科', q: 'ふりこが 1往復する 時間は、なにを 変えると 変わる？', c: ['おもりの 重さ', 'ふりこの 長さ', 'ふれはば', '糸の 色'], a: 1, hint: 'ひも（ふりこ）を 長くすると ゆっくりに なり、短くすると 速くなるよ！' },
+                    { cat: '算数', q: '三角形の 面積を もとめる 公式は「底辺 × 高さ ÷ 〇〇」。〇〇は いくつ？', c: ['2', '3', '4', '3.14'], a: 0, hint: '平行四辺形の 半分の 面積だから 2で わるよ！' },
+                    { cat: '社会', q: '外国から 原料や 燃料を 輸入し、製品を つくって 輸出する 貿易を なんという？', c: ['加工貿易', '仲介貿易', '自由貿易', '保護貿易'], a: 0, hint: '原料を 「加工」して 製品にする 貿易だよ！' },
+                    { cat: '理科', q: '食塩水から 食塩を とりだす 方法として 正しいものは どれ？', c: ['ろ紙で こす', '水を 蒸発させる', '磁石を 近づける', 'ふるいに かける'], a: 1, hint: '水が なくなると とけていた 食塩の つぶが 出てくるよ！' },
+                    { cat: '算数', q: '1から 10までの 整数を ぜんぶ たすと いくつに なる？', c: ['45', '50', '55', '60'], a: 2, hint: '（1＋10）× 5 ＝ 55 になるよ！' },
+                    { cat: '国語', q: '「一石二鳥」の 意味として 正しいものは どれ？', c: ['1つの 行動で 2つの 利益を えること', 'とても むずかしいこと', '失敗ばかりすること', '鳥を 2わ かうこと'], a: 0, hint: '1つの 石を なげて 2わの 鳥を えることから 来ているよ！' },
+                    { cat: '社会', q: '日本で 米の 生産量が いちばん 多い 都道府県は どこ？（2020年代統計）', c: ['秋田県', '新潟県', '山形県', '北海道'], a: 1, hint: 'コシヒカリで 有名な、日本海側の 「にいがたけん」だよ！' },
+                    { cat: '理科', q: 'メダカの おす と めす を 見分ける ポイントの 1つは どれ？', c: ['しりびれの 形', '目の 色', 'うろこの 数', 'およぐ 速さ'], a: 0, hint: 'おすの しりびれは 平行四辺形に 近く、先が ギザギザしているよ！' },
+                    { cat: '算数', q: '円周率（約3.14）は、円周の 長さが 直径の 何倍かを あらわす？', c: ['約2倍', '約3.14倍', '約4倍', '約10倍'], a: 1, hint: '円周 ＝ 直径 × 3.14 だよ！' },
+                    { cat: '社会', q: '自動車や 電気製品などの 工場が 集まっている 太平洋側の 地域を なんという？', c: ['太平洋ベルト', '日本海ライン', '中央高地', '南西諸島'], a: 0, hint: '関東から 九州北部まで ベルトのように 工業地帯が つながっているよ！' },
+                    { cat: '家庭科', q: '五大栄養素の うち、主に 体をつくる もとに なるのは どれ？', c: ['炭水化物', 'たんぱく質', 'ビタミン', '脂質'], a: 1, hint: '肉・魚・卵・大豆などに 多く ふくまれる 栄養素だよ！' }
+                ],
+                '6': [
+                    { cat: '歴史', q: '奈良の 東大寺に 大仏を つくることを 命じた 天皇は だれ？', c: ['聖武天皇', '天智天皇', '桓武天皇', '明治天皇'], a: 0, hint: '仏教の 力で 国を まもろうとした 「しょうむてんのう」だよ！' },
+                    { cat: '政治', q: '日本国憲法の 3つの 基本原則は「国民主権・平和主義」と あと 1つは？', c: ['基本的人権の尊重', '三権分立', '義務教育', '地方自治'], a: 0, hint: 'すべての 人間が 生まれながらに もつ 権利を 大切にすることだよ！' },
+                    { cat: '理科', q: '植物の 葉に 日光が あたると デンプンが つくられる はたらきを なんという？', c: ['呼吸', '光合成', '蒸散', '消化'], a: 1, hint: '光の エネルギーを つかって 栄養を 合成するよ！' },
+                    { cat: '歴史', q: '1192年ごろ、鎌倉幕府を 開いた 人物は だれ？', c: ['源頼朝', '平清盛', '足利尊氏', '徳川家康'], a: 0, hint: '弟の 源義経らと ともに 平氏を ほろぼした 武将だよ！' },
+                    { cat: '政治', q: '日本の 国の 政治で、法律を つくる 唯一の 立法機関は どこ？', c: ['内閣', '国会', '最高裁判所', '都道府県議会'], a: 1, hint: '衆議院と 参議院から なる 国の 最高機関だよ！' },
+                    { cat: '理科', q: '気体の うち、ものを 燃やす はたらきが 強いのは どれ？', c: ['ちっ素', '酸素', '二酸化炭素', '水素'], a: 1, hint: '空気中に 約21％ ふくまれていて、生き物の 呼吸にも 必要だよ！' },
+                    { cat: '歴史', q: '戦国時代を 終わりにして、江戸幕府を 開いた 人物は だれ？', c: ['織田信長', '豊臣秀吉', '徳川家康', '明智光秀'], a: 2, hint: '関ヶ原の 戦いに 勝利し、約260年つづく 江戸時代の 基礎を つくったよ！' },
+                    { cat: '理科', q: '人の 血液を 全身に 送り出す ポンプの 役割をする 臓器は どれ？', c: ['肺', '胃', '心臓', '肝臓'], a: 2, hint: 'むねの 中で ドクンドクンと 動きつづけている 臓器だよ！' },
+                    { cat: '政治', q: '日本の 選挙で 投票できる 年齢は 満 何歳以上？', c: ['16歳以上', '18歳以上', '20歳以上', '25歳以上'], a: 1, hint: '高校3年生の 年齢（満18歳）から 選挙権を もつよ！' },
+                    { cat: '歴史', q: '604年に 聖徳太子が 定めた、役人の 心がまえを 示した きまりは どれ？', c: ['十七条の憲法', '大宝律令', '御成敗式目', '大日本帝国憲法'], a: 0, hint: '「和を もって 貴しと なす」で はじまるよ！' },
+                    { cat: '理科', q: '青色リトマス紙を 赤色に 変える 水溶液の 性質は どれ？', c: ['酸性', '中性', 'アルカリ性', '磁性'], a: 0, hint: 'レモン汁や 食酢（お酢）などが この 性質だよ！' },
+                    { cat: '算数', q: '時速 60km で 走る 車が、2時間30分 進むと なんkm 進む？', c: ['120km', '140km', '150km', '180km'], a: 2, hint: '60 × 2.5 ＝ 150km になるよ！' },
+                    { cat: '歴史', q: '縄文時代の 人々が 住んでいた、地面を ほりくぼめて つくった 家を なんという？', c: ['たて穴住居', '高床倉庫', '寝殿造', '書院造'], a: 0, hint: '地面を ほって 柱を 立て、草や 土で 屋根を ふいた 住居だよ！' },
+                    { cat: '国際', q: '世界の 平和と 安全を まもるために 1945年に つくられた 国際機関は どれ？', c: ['国際連盟', '国際連合（国連）', 'EU', 'ASEAN'], a: 1, hint: '本部は アメリカの ニューヨークに あるよ！' },
+                    { cat: '歴史', q: '明治政府が 行った、藩を なくして 県を おく 改革を なんという？', c: ['廃藩置県', '版籍奉還', '大政奉還', '地租改正'], a: 0, hint: '「藩を 廃して 県を 置く」そのままの 漢字4文字だよ！' }
+                ],
+                'vivant': [
+                    { cat: '主人公', q: 'ドラマ『VIVANT』で、堺雅人さんが 演じた 主人公の 名前は だれ？', c: ['乃木憂助', '野崎守', '黒須駿', 'ノゴーン・ベキ'], a: 0, hint: '丸菱商事の 社員であり、もう一つの 顔を もつ 主人公だよ！' },
+                    { cat: '秘密組織', q: '主人公・乃木憂助が 所属していた、自衛隊の 秘密情報部隊の 通称は なに？', c: ['別班（べっぱん）', '特命係', '公安ゼロ', 'テント'], a: 0, hint: '漢字2文字で 「べっぱん」と 読む 秘密組織だよ！' },
+                    { cat: '舞台の国', q: '物語の 序盤で 乃木や 野崎が 大冒険を くりひろげた、架空の中央アジアの 国は？', c: ['バルカ共和国', 'ルパン王国', 'アルカディア', 'ナンダカ国'], a: 0, hint: '砂漠や 広大な 草原が 広がる 「〇〇共和国」だよ！' },
+                    { cat: '重要キャラ', q: '言葉を 話せないかわりに、スマホの 翻訳機アプリで 会話する バルカの 仲間は だれ？', c: ['ドラム', 'チンギス', 'ジャミーン', 'アディエル'], a: 0, hint: 'かわいい 笑顔と スマホの 「ピロリン♪」という 音声が 大人気だったよ！' },
+                    { cat: '発端の事件', q: '第1話で 乃木憂助が バルカ共和国へ 向かう きっかけになった 事件は なに？', c: ['1億ドルの誤送金事件', '秘密文書の盗難', '宝石のすり替え', '宇宙船の墜落'], a: 0, hint: '契約金額の 10倍（1億ドル）が 誤って 送金されてしまった 事件だよ！' },
+                    { cat: '公安の刑事', q: '阿部寛さんが 演じた、乃木を 助ける 警視庁公安部の 刑事は だれ？', c: ['野崎守', '新庄浩太郎', '佐野雄吾', '長野専務'], a: 0, hint: 'ドラムの 頼れる 相棒でもある 「のざき まもる」だよ！' },
+                    { cat: 'タイトルの意味', q: 'ドラマの タイトル『VIVANT（ヴィヴァン）』が 劇中で 意味していた 言葉は なに？', c: ['別班（BEPPAN）', '勝利（VICTORY）', '悪魔（VILLAIN）', '旅行（VOYAGE）'], a: 0, hint: 'モンゴル語の 発音で 「BEPPAN」が 「VIVANT」に 聞こえたことが 由来だよ！' },
+                    { cat: '撮影ロケ地', q: 'バルカ共和国の 砂漠や 草原の シーンは、実際に どこの 国で 約2か月半 ロケ撮影された？', c: ['モンゴル', 'エジプト', 'オーストラリア', 'ブラジル'], a: 0, hint: '広大な 大草原と ゴビ砂漠が 広がる アジアの 国だよ！' },
+                    { cat: '謎の組織', q: '世界中で テロや サイバー攻撃を 行う 謎の 武装組織の 名前は なに？', c: ['テント', 'ドーム', 'ハウス', 'タワー'], a: 0, hint: '遊牧民の 移動式住居（ゲル）に ちなんだ 名前だよ！' },
+                    { cat: '重要アイテム', q: 'テントの リーダー「ノゴーン・ベキ」が 家族の お祝い事の ときに 必ず 食べていた 日本料理は？', c: ['お赤飯', 'お寿司', '天ぷら', 'カレーライス'], a: 0, hint: '小豆と もち米で 炊く、お祝いに 欠かせない ごはんだよ！' },
+                    { cat: '乃木の特技', q: '別班の エージェント・乃木憂助が 人の 体重や モノの 重さを 一瞬で 当てるときに 使う 道具は？', c: ['なにも使わない（手の感覚）', 'デジタルはかり', '定規', 'ストップウォッチ'], a: 0, hint: '手に 持っただけで 1グラム単位まで わかる 驚異の 感覚を もっているよ！' },
+                    { cat: '公安の仲間', q: 'ドラムが 持っている スマホの 翻訳音声を 担当した 声優は だれ？', c: ['林原めぐみ', '田中真弓', '山寺宏一', '野沢雅子'], a: 0, hint: '名探偵コナンの 灰原哀役などでも 有名な 声優さんだよ！' },
+                    { cat: '別班の相棒', q: '松坂桃李さんが 演じた、乃木を 「先輩」と したう 別班の メンバーは だれ？', c: ['黒須駿', '高田明敏', '櫻井里美', '広瀬正純'], a: 0, hint: '苗字に 「黒」の 字が入る 「くろす しゅん」だよ！' },
+                    { cat: 'テントの幹部', q: '二宮和也さんが 演じた、ノゴーン・ベキを 「父さん」と 呼ぶ テントの 幹部は だれ？', c: ['ノコル', 'バトラカ', 'ピヨ', 'ゴビ'], a: 0, hint: '乃木憂助にとっては 義理の 弟にあたる 「ノ〇ル」だよ！' },
+                    { cat: '劇中の医療', q: '二階堂ふみさんが 演じた、バルカ共和国で 働く 世界医療機構の 医師は だれ？', c: ['柚木薫', '太田梨歩', '水沼玲子', '河合奈美'], a: 0, hint: '少女ジャミーンを 大切に 見守る 「ゆずき かおる」先生だよ！' }
+                ],
+                'udai': [
+                    { cat: '学校の所在地', q: '宇都宮大学共同教育学部附属小学校がある、宇都宮市の 町名は どこ？', c: ['松原1丁目', '宝木町', '峰町', '陽東'], a: 0, hint: '栃木県宇都宮市 まつばら 1丁目7番38号に あるよ！' },
+                    { cat: '学級数', q: '宇都宮大学附属小学校の 1年生〜6年生は、それぞれ 1組から 何組まである？', c: ['2組まで（2クラス）', '3組まで（3クラス）', '4組まで（4クラス）', '5組まで（5クラス）'], a: 1, hint: '各学年 1組・2組・3組の 3クラスずつ あるよ！' },
+                    { cat: '大学マスコット', q: '宇都宮大学の 公式マスコットキャラクターの 名前は なに？', c: ['うーたくん', 'みやどん', 'とちまるくん', 'ぎょうざん'], a: 0, hint: '宇都宮大学の 「う」と 「た」をとった かわいい キャラクターだよ！' },
+                    { cat: '学校の連絡先', q: '附属小学校の 公式メールアドレス（〇〇@cc.utsunomiya-u.ac.jp）の「〇〇」に 使われている 栃木県の名産品は？', c: ['ichigo（いちご）', 'gyoza（ぎょうざ）', 'kanpyo（かんぴょう）', 'nashi（なし）'], a: 0, hint: '栃木県が 生産量日本一を ほこる、赤くて 甘酸っぱい 果物だよ！' },
+                    { cat: '先生たちの体制', q: '附属小学校では、1〜3組の 担任の 先生のほかに、低学年・中学年・高学年に どんな先生が 配置されている？', c: ['副担任（ふくたんにん）の先生', 'バスの運転手さん', '警備員さん', 'カメラマンさん'], a: 0, hint: '低学年副担任・中学年副担任・高学年副担任の 先生が 学年を サポートしているよ！' },
+                    { cat: '1年生の合言葉', q: '公式サイトの 学年紹介で、1年生の 合言葉に 使われている 言葉は「〇〇しよう！いいね！」です。〇〇は なに？', c: ['ちょうせん（挑戦）', 'おひるね', 'おかいもの', 'テレビ'], a: 0, hint: '新しいことに どんどん チャレンジする 「〇〇しよう！いいね！」だよ！' },
+                    { cat: '2年生の紹介', q: '公式サイトの 学年紹介で、2年生は どんな テーマの 学年として 紹介されている？', c: ['じぶんで・なかまと・わくわく', 'しずかに・じっと・がまん', 'ひとりで・もくもく・べんきょう', 'はやく・走ろう・リレー'], a: 0, hint: '友達と なかよく 「じぶんで・なかまと・わくわく」 学び合うよ！' },
+                    { cat: '3年生の学び', q: '3年生になると、1・2年生の「生活科」から ステップアップして 新しく 始まる 教科は どれ？', c: ['理科・社会・外国語活動', '家庭科・技術科', '古文・漢文', 'プログラミング検定'], a: 0, hint: '実験の 「理科」、地域の 「社会」、英語に親しむ 「外国語活動」が 始まるよ！' },
+                    { cat: '4年生のテーマ', q: '4年生の テーマは「3つのC」です。Creativity（創造）・Communication（対話）と もう1つは なに？', c: ['Challenge（挑戦）', 'Cooking（料理）', 'Cleaning（掃除）', 'Cycling（自転車）'], a: 0, hint: '新しいことに 立ち向かう 「C」から 始まる 言葉だよ！' },
+                    { cat: '5年生の学び', q: '高学年の 仲間入りをする 5年生が 校外で 仲間と 寝泊まりしながら 協力する 行事は なに？', c: ['宿泊学習', '卒業旅行', '修学旅行（海外）', '大学入試'], a: 0, hint: '自然の中で 仲間と 協力する 「しゅくはくがくしゅう」だよ！' },
+                    { cat: '6年生の目標', q: '最高学年である 6年生の 目標は「よりよい学校生活を 〇〇 つくる」です。〇〇に 入る 言葉は なに？', c: ['自ら（みずから）', 'あとから', 'ひとりで', 'こっそり'], a: 0, hint: '最高学年として リーダーシップを 発揮する 「みずから」だよ！' },
+                    { cat: '学年紹介のヒミツ', q: '公式サイトの「学年紹介」ページでは、1年〜6年の あとに、校長先生や 養護教諭・栄養教諭などの 先生方が「何年」として 紹介されている？', c: ['0年', '第7学年（7年）', '第10学年', '第100学年'], a: 1, hint: '6年生の つぎだから 「第〇学年」として 楽しく 紹介されているよ！' },
+                    { cat: '第7学年の人数', q: '公式サイトの「学年紹介」で、校長先生・副校長先生・養護教諭・栄養教諭・事務職員などの「第7学年」は 何人の 大所帯と 紹介されている？', c: ['5人', '8人', '13人', '30人'], a: 2, hint: '「第7学年は 〇〇人の 大所帯です」と 紹介されているよ！' },
+                    { cat: '附属小の特色', q: '大学の 附属小学校ならではの 特色として、未来の 先生をめざす 大学生が 授業を行う 期間を なんという？', c: ['教育実習', 'インターンシップ', 'アルバイト', '自由研究'], a: 0, hint: '宇都宮大学の 学生さんが 先生になるために 学びに来る 「きょういくじっしゅう」だよ！' },
+                    { cat: '探究の学び', q: '宇都宮大学附属小学校の 子どもたちが 自分で 課題を見つけて 深く 調べ、発表する 学びは どの時間に行われる？', c: ['総合的な学習の時間（探究活動）', '給食の時間', '朝の会', '下校の時間'], a: 0, hint: '自ら 問いを立てて 探究する 「そうごうてきな がくしゅうの じかん」だよ！' }
+                ]
+            };
+
+            // ==========================================
+            // 5. ゲーム状態変数
+            // ==========================================
+            let currentCourse = '1';
+            let currentQuestions = [];
+            let currentIndex = 0;
+            let selectedChoiceIndex = null;
+            let isProcessing = false;
+            let lifelines = { fifty: true, phone: true, audience: true };
+            let lastResultData = null;
+            let activeRankingTab = '1';
+            let questionTimer = null;
+            let timeLeft = 35;
+
+            // ==========================================
+            // 6. 画面・テーマ切り替え
+            // ==========================================
+            function applyCourseTheme(courseKey) {
+                const meta = COURSE_META[courseKey] || COURSE_META['1'];
+                document.body.classList.remove('theme-vivant', 'theme-udai');
+
+                const sub = document.getElementById('header-subtitle');
+                if (meta.theme === 'vivant') {
+                    document.body.classList.add('theme-vivant');
+                    sub.innerHTML = applyRuby('🕵️ SPECIAL STAGE：別班・テント・バルカ共和国からの挑戦状');
+                } else if (meta.theme === 'udai') {
+                    document.body.classList.add('theme-udai');
+                    sub.innerHTML = applyRuby('🏫 SPECIAL STAGE：宇都宮大学共同教育学部附属小学校 特別編');
+                } else {
+                    sub.innerHTML = applyRuby('1年生〜6年生 ＋ 番外編VIVANT・宇大附属小！');
+                }
+            }
+
+            function showScreen(screenId) {
+                ['screen-start', 'screen-game', 'screen-result'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.add('hidden');
+                });
+                const target = document.getElementById(screenId);
+                if (target) target.classList.remove('hidden');
+            }
+
+            function returnToStart() {
+                playSFX('click');
+                stopHeartbeat();
+                stopQuestionTimer();
+                applyCourseTheme('1');
+                showScreen('screen-start');
+            }
+
+            // ==========================================
+            // 7. クイズ開始・出題ロジック
+            // ==========================================
+            function pick10GraduatedQuestions(pool) {
+                const easy = pool.slice(0, 5).sort(() => Math.random() - 0.5).slice(0, 3);
+                const med = pool.slice(5, 10).sort(() => Math.random() - 0.5).slice(0, 4);
+                const hard = pool.slice(10, 15).sort(() => Math.random() - 0.5).slice(0, 3);
+                return [...easy, ...med, ...hard];
+            }
+
+            function startGame(courseKey) {
+                initAudio();
+                playSFX('select');
+
+                currentCourse = courseKey;
+                currentIndex = 0;
+                selectedChoiceIndex = null;
+                isProcessing = false;
+                lifelines = { fifty: true, phone: true, audience: true };
+
+                applyCourseTheme(courseKey);
+
+                const pool = QUIZ_DATABASE[courseKey] || QUIZ_DATABASE['1'];
+                currentQuestions = pick10GraduatedQuestions(pool);
+
+                const meta = COURSE_META[courseKey] || COURSE_META['1'];
+                document.getElementById('badge-course').innerHTML = applyRuby(meta.name);
+
+                ['life-5050', 'life-phone', 'life-audience'].forEach(id => {
+                    const btn = document.getElementById(id);
+                    if (btn) btn.disabled = false;
+                });
+                ['5050', 'phone', 'audience'].forEach(type => {
+                    const badge = document.getElementById(`badge-life-${type}`);
+                    if (badge) badge.classList.remove('hidden');
+                });
+
+                renderPrizeLadder();
+                showScreen('screen-game');
+                loadQuestion();
+            }
+
+            function renderPrizeLadder() {
+                const ul = document.getElementById('prize-ladder');
+                ul.innerHTML = '';
+
+                PRIZE_LADDER.forEach((item, idx) => {
+                    const li = document.createElement('li');
+                    li.className = 'ladder-item';
+                    if (item.safety) li.classList.add('is-safety');
+                    if (idx === currentIndex) li.classList.add('is-active');
+                    else if (idx < currentIndex) li.classList.add('is-passed');
+
+                    const star = item.safety ? ' ★' : '';
+                    li.innerHTML = `<span>${item.step}${star}</span><span>${applyRuby(item.label)}</span>`;
+                    ul.appendChild(li);
+                });
+            }
+
+            function startQuestionTimer() {
+                stopQuestionTimer();
+                const meta = COURSE_META[currentCourse] || COURSE_META['1'];
+                timeLeft = meta.time;
+
+                const timerBox = document.getElementById('timer-box');
+                const timerSec = document.getElementById('timer-sec');
+                timerBox.classList.remove('timer-danger');
+                timerSec.textContent = String(timeLeft);
+
+                questionTimer = setInterval(() => {
+                    if (isProcessing) return;
+                    timeLeft--;
+                    timerSec.textContent = String(Math.max(0, timeLeft));
+
+                    if (timeLeft <= 10 && timeLeft > 0) {
+                        timerBox.classList.add('timer-danger');
+                        playTone(880, 'sine', 0.06, 0.07);
+                    }
+
+                    if (timeLeft <= 0) {
+                        stopQuestionTimer();
+                        document.getElementById('modal-final').classList.add('hidden');
+                        stopHeartbeat();
+                        playSFX('wrong');
+                        endGame('timeup');
+                    }
+                }, 1000);
+            }
+
+            function stopQuestionTimer() {
+                if (questionTimer) {
+                    clearInterval(questionTimer);
+                    questionTimer = null;
+                }
+            }
+
+            function loadQuestion() {
+                isProcessing = false;
+                selectedChoiceIndex = null;
+
+                const qObj = currentQuestions[currentIndex];
+                document.getElementById('badge-qnum').innerHTML = `<ruby>第<rt>だい</rt></ruby> ${currentIndex + 1} <ruby>問<rt>もん</rt></ruby> / 10`;
+                document.getElementById('question-category').innerHTML = applyRuby(`【ジャンル：${qObj.cat}】`);
+                document.getElementById('question-text').innerHTML = applyRuby(qObj.q);
+
+                for (let i = 0; i < 4; i++) {
+                    const btn = document.getElementById(`choice-${i}`);
+                    btn.disabled = false;
+                    btn.className = 'choice-btn';
+                    document.getElementById(`choice-text-${i}`).innerHTML = applyRuby(qObj.c[i]);
+                }
+
+                const dropoutBtn = document.getElementById('btn-dropout');
+                if (currentIndex > 0) {
+                    dropoutBtn.classList.remove('hidden');
+                    const safePrize = PRIZE_LADDER[currentIndex - 1].label;
+                    dropoutBtn.innerHTML = applyRuby(`💼 ドロップアウト（${safePrize} をかくてい）`);
+                } else {
+                    dropoutBtn.classList.add('hidden');
+                }
+
+                renderPrizeLadder();
+                startQuestionTimer();
+            }
+
+            // ==========================================
+            // 8. 回答選択・ファイナルアンサー判定
+            // ==========================================
+            function selectChoice(idx) {
+                if (isProcessing) return;
+                playSFX('select');
+
+                selectedChoiceIndex = idx;
+                for (let i = 0; i < 4; i++) {
+                    document.getElementById(`choice-${i}`).classList.remove('choice-selected');
+                }
+                document.getElementById(`choice-${idx}`).classList.add('choice-selected');
+
+                const letters = ['A', 'B', 'C', 'D'];
+                const qObj = currentQuestions[currentIndex];
+                document.getElementById('final-choice-preview').innerHTML = applyRuby(`${letters[idx]}: ${qObj.c[idx]}`);
+                document.getElementById('modal-final').classList.remove('hidden');
+
+                startHeartbeat();
+            }
+
+            function cancelFinalAnswer() {
+                playSFX('click');
+                stopHeartbeat();
+                document.getElementById('modal-final').classList.add('hidden');
+                if (selectedChoiceIndex !== null) {
+                    document.getElementById(`choice-${selectedChoiceIndex}`).classList.remove('choice-selected');
+                    selectedChoiceIndex = null;
+                }
+            }
+
+            function confirmFinalAnswer() {
+                if (isProcessing || selectedChoiceIndex === null) return;
+                isProcessing = true;
+                stopQuestionTimer();
+                document.getElementById('modal-final').classList.add('hidden');
+
+                for (let i = 0; i < 4; i++) {
+                    document.getElementById(`choice-${i}`).disabled = true;
+                }
+
+                const qObj = currentQuestions[currentIndex];
+                const isCorrect = (selectedChoiceIndex === qObj.a);
+
+                setTimeout(() => {
+                    stopHeartbeat();
+                    const chosenBtn = document.getElementById(`choice-${selectedChoiceIndex}`);
+                    const correctBtn = document.getElementById(`choice-${qObj.a}`);
+                    chosenBtn.classList.remove('choice-selected');
+
+                    if (isCorrect) {
+                        chosenBtn.classList.add('choice-correct');
+                        playSFX('correct');
+
+                        setTimeout(() => {
+                            currentIndex++;
+                            if (currentIndex >= 10) {
+                                endGame('clear');
+                            } else {
+                                loadQuestion();
+                            }
+                        }, 1300);
+                    } else {
+                        chosenBtn.classList.add('choice-wrong');
+                        correctBtn.classList.add('choice-correct');
+                        playSFX('wrong');
+
+                        setTimeout(() => {
+                            endGame('wrong');
+                        }, 1800);
+                    }
+                }, 1200);
+            }
+
+            // ==========================================
+            // 9. ライフライン処理
+            // ==========================================
+            function useLifeline5050() {
+                if (!lifelines.fifty || isProcessing) return;
+                playSFX('select');
+                lifelines.fifty = false;
+                document.getElementById('life-5050').disabled = true;
+                document.getElementById('badge-life-5050').classList.add('hidden');
+
+                const correctIdx = currentQuestions[currentIndex].a;
+                const wrongIndices = [0, 1, 2, 3].filter(i => i !== correctIdx).sort(() => Math.random() - 0.5);
+
+                wrongIndices.slice(0, 2).forEach(idx => {
+                    const btn = document.getElementById(`choice-${idx}`);
+                    btn.disabled = true;
+                    btn.classList.add('choice-eliminated');
+                });
+            }
+
+            function useLifelinePhone() {
+                if (!lifelines.phone || isProcessing) return;
+                lifelines.phone = false;
+                document.getElementById('life-phone').disabled = true;
+                document.getElementById('badge-life-phone').classList.add('hidden');
+
+                const qObj = currentQuestions[currentIndex];
+                const meta = COURSE_META[currentCourse] || COURSE_META['1'];
+
+                let caller = '';
+                let intro = '';
+                let icon = '📞';
+
+                if (meta.theme === 'vivant') {
+                    playSFX('chime');
+                    const list = [
+                        { name: 'ドラム（翻訳機の音声）', intro: 'ピロリン♪（スマホの翻訳音声が流れた！）<br>「ノザキサン カラノ デンゴン デス！」', icon: '📱' },
+                        { name: '野崎守（警視庁公安部）', intro: '「おう、乃木！公安のネットワークで調べたぞ！」', icon: '🕵️' },
+                        { name: '黒須駿（別班）', intro: '「先輩！極秘ファイルから情報を引き出しました！」', icon: '🕶️' }
+                    ];
+                    const pick = list[Math.floor(Math.random() * list.length)];
+                    caller = pick.name;
+                    intro = pick.intro;
+                    icon = pick.icon;
+                } else if (meta.theme === 'udai') {
+                    playSFX('chime');
+                    const list = [
+                        { name: 'うーたくん（宇都宮大学マスコット）', intro: '「やっほー！宇大の『うーたくん』だよ！ヒントをおしえるね！」', icon: '🎓' },
+                        { name: '宇大附属小の先生', intro: '「よく考えていてすばらしいですね！この問題のヒントはね…」', icon: '👩‍🏫' },
+                        { name: '第7学年の先生チーム', intro: '「松原のキャンパスから応援しているよ！ヒントはこれだ！」', icon: '🏫' }
+                    ];
+                    const pick = list[Math.floor(Math.random() * list.length)];
+                    caller = pick.name;
+                    intro = pick.intro;
+                    icon = pick.icon;
+                } else {
+                    playSFX('select');
+                    const callers = ['お父さん', 'お母さん', '担任の先生', '物知りな博士'];
+                    caller = callers[Math.floor(Math.random() * callers.length)];
+                    intro = `「もしもし！${caller}だよ！えっとね、この問題のヒントは…」`;
+                }
+
+                openInfoModal(
+                    icon,
+                    applyRuby(`テレフォン（${caller}）`),
+                    `<div style="background:#020617; border:1px solid #334155; border-radius:14px; padding:14px; text-align:left;">
+                        <div style="font-size:12px; color:#7dd3fc; font-weight:800; margin-bottom:6px;">${applyRuby(intro)}</div>
+                        <div style="font-size:15px; font-weight:900; color:#fde047;">『${applyRuby(qObj.hint)}』</div>
+                    </div>`
+                );
+            }
+
+            function useLifelineAudience() {
+                if (!lifelines.audience || isProcessing) return;
+                playSFX('select');
+                lifelines.audience = false;
+                document.getElementById('life-audience').disabled = true;
+                document.getElementById('badge-life-audience').classList.add('hidden');
+
+                const correctIdx = currentQuestions[currentIndex].a;
+                const letters = ['A', 'B', 'C', 'D'];
+                const votes = [0, 0, 0, 0];
+
+                const correctVote = 58 + Math.floor(Math.random() * 23);
+                votes[correctIdx] = correctVote;
+                let remaining = 100 - correctVote;
+
+                const others = [0, 1, 2, 3].filter(i => i !== correctIdx);
+                others.forEach((idx, i) => {
+                    if (i === others.length - 1) {
+                        votes[idx] = remaining;
+                    } else {
+                        const v = Math.floor(Math.random() * (remaining + 1));
+                        votes[idx] = v;
+                        remaining -= v;
+                    }
+                });
+
+                let barsHtml = '<div class="aud-wrap">';
+                letters.forEach((ch, i) => {
+                    barsHtml += `
+                        <div>
+                            <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:900;">
+                                <span style="color:#facc15;">${ch}</span>
+                                <span>${votes[i]}%</span>
+                            </div>
+                            <div class="aud-bar-bg">
+                                <div class="aud-bar-fill" style="width:${votes[i]}%;"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+                barsHtml += '</div>';
+
+                openInfoModal('📊', 'オーディエンス投票結果', barsHtml);
+            }
+
+            // ==========================================
+            // 10. ドロップアウト・終了・ランキング
+            // ==========================================
+            function triggerDropout() {
+                if (isProcessing || currentIndex === 0) return;
+                playSFX('click');
+                const currentPrize = PRIZE_LADDER[currentIndex - 1].label;
+                openInfoModal(
+                    '💼',
+                    'ドロップアウトしますか？',
+                    applyRuby(`<p>ここで チャレンジを やめると、今の 賞金 <strong style="color:#fde047; font-size:17px;">【 ${currentPrize} 】</strong> を 確実に もらえます！</p>`),
+                    [
+                        { label: 'まだつづける', primary: false, action: closeInfoModal },
+                        { label: '賞金をかくていする！', primary: true, action: () => { closeInfoModal(); endGame('dropout'); } }
+                    ]
+                );
+            }
+
+            function endGame(reason) {
+                stopHeartbeat();
+                stopQuestionTimer();
+                showScreen('screen-result');
+
+                const meta = COURSE_META[currentCourse] || COURSE_META['1'];
+                let prizeValue = 0;
+                let prizeLabel = '0円';
+
+                if (reason === 'clear') {
+                    prizeValue = 10000000;
+                    prizeLabel = '1,000万円';
+                    playSFX('millionaire');
+                    launchConfetti();
+
+                    if (meta.theme === 'vivant') {
+                        document.getElementById('result-icon').textContent = '🕵️‍♂️';
+                        document.getElementById('result-title').innerHTML = applyRuby('極秘任務コンプリート！！');
+                        document.getElementById('result-desc').innerHTML = applyRuby('見事だ！『VIVANT』の全10問を完全制覇し、1,000万円を獲得した！キミは最高のエージェントだ！');
+                    } else if (meta.theme === 'udai') {
+                        document.getElementById('result-icon').textContent = '🎓';
+                        document.getElementById('result-title').innerHTML = applyRuby('宇大附属小マスター達成！！');
+                        document.getElementById('result-desc').innerHTML = applyRuby('おめでとう！『宇都宮大学附属小学校』の全10問を完全制覇したよ！うーたくんも大喜びだ！');
+                    } else {
+                        document.getElementById('result-icon').textContent = '👑';
+                        document.getElementById('result-title').innerHTML = applyRuby('祝・ミリオネア達成！！');
+                        document.getElementById('result-desc').innerHTML = applyRuby(`おめでとう！${meta.name}の全10問を完全制覇したよ！キミは真のクイズ王だ！`);
+                    }
+                } else if (reason === 'dropout') {
+                    prizeValue = PRIZE_LADDER[currentIndex - 1].value;
+                    prizeLabel = PRIZE_LADDER[currentIndex - 1].label;
+                    playSFX('correct');
+                    document.getElementById('result-icon').textContent = '💼';
+                    document.getElementById('result-title').innerHTML = applyRuby('ドロップアウト成功！');
+                    document.getElementById('result-desc').innerHTML = applyRuby(`ナイス判断！見事に【 ${prizeLabel} 】を かくとくしたよ！次は 1,000万円を めざそう！`);
+                } else {
+                    if (currentIndex >= 8) {
+                        prizeValue = 2500000;
+                        prizeLabel = '250万円';
+                    } else if (currentIndex >= 5) {
+                        prizeValue = 200000;
+                        prizeLabel = '20万円';
+                    } else {
+                        prizeValue = 0;
+                        prizeLabel = '0円';
+                    }
+                    document.getElementById('result-icon').textContent = reason === 'timeup' ? '⏰' : '🎬';
+                    document.getElementById('result-title').textContent = reason === 'timeup' ? 'タイムアップ！' : 'チャレンジしゅうりょう！';
+                    document.getElementById('result-desc').innerHTML = applyRuby(prizeValue > 0
+                        ? `おしい！でも セーフティラインを とっぱしていたので【 ${prizeLabel} 】を かくとくしたよ！`
+                        : `ざんねん！でも むずかしい 問題に よく ちょうせんしたね！もういちど チャレンジしよう！`);
+                }
+
+                document.getElementById('result-course-badge').innerHTML = applyRuby(`${meta.name} けっか`);
+                document.getElementById('result-prize').innerHTML = applyRuby(prizeLabel);
+                document.getElementById('result-correct-count').innerHTML = `せいかい<ruby>数<rt>すう</rt></ruby>：${currentIndex}<ruby>問<rt>もん</rt></ruby> / 10<ruby>問<rt>もん</rt></ruby>`;
+
+                lastResultData = {
+                    course: currentCourse,
+                    score: prizeValue,
+                    prizeLabel: prizeLabel,
+                    correctCount: currentIndex
+                };
+
+                const regBox = document.getElementById('score-register-box');
+                if (prizeValue > 0 || currentIndex > 0) {
+                    regBox.classList.remove('hidden');
+                    document.getElementById('input-nickname').value = '';
+                } else {
+                    regBox.classList.add('hidden');
+                }
+            }
+
+            function getRankKey(courseKey) {
+                return `millionaire_kids_v5_rank_${courseKey}`;
+            }
+
+            function loadCourseRanking(courseKey) {
+                const raw = safeGetStorage(getRankKey(courseKey));
+                if (!raw) return [];
+                try {
+                    const parsed = JSON.parse(raw);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function saveCourseRanking(courseKey, list) {
+                safeSetStorage(getRankKey(courseKey), JSON.stringify(list));
+            }
+
+            function registerScoreToRanking() {
+                if (!lastResultData) return;
+                playSFX('correct');
+
+                const input = document.getElementById('input-nickname');
+                const nickname = (input && input.value.trim()) ? input.value.trim() : 'チャレンジャー';
+
+                const list = loadCourseRanking(lastResultData.course);
+                list.push({
+                    name: nickname,
+                    score: lastResultData.score,
+                    prizeLabel: lastResultData.prizeLabel,
+                    correctCount: lastResultData.correctCount
+                });
+
+                list.sort((a, b) => (b.score - a.score) || (b.correctCount - a.correctCount));
+                saveCourseRanking(lastResultData.course, list.slice(0, 5));
+
+                const targetCourse = lastResultData.course;
+                lastResultData = null;
+                document.getElementById('score-register-box').classList.add('hidden');
+
+                openRankingModal(targetCourse);
+            }
+
+            function openRankingModal(courseKey) {
+                playSFX('click');
+                activeRankingTab = courseKey || '1';
+                switchRankingTab(activeRankingTab);
+                document.getElementById('modal-ranking').classList.remove('hidden');
+            }
+
+            function closeRankingModal() {
+                playSFX('click');
+                document.getElementById('modal-ranking').classList.add('hidden');
+            }
+
+            function switchRankingTab(courseKey) {
+                activeRankingTab = courseKey;
+                document.querySelectorAll('.rank-tab-btn').forEach(btn => {
+                    if (btn.getAttribute('data-rank-tab') === courseKey) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+
+                const tbody = document.getElementById('ranking-tbody');
+                const list = loadCourseRanking(courseKey);
+                const meta = COURSE_META[courseKey] || COURSE_META['1'];
+                tbody.innerHTML = '';
+
+                if (list.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" style="padding:28px 12px; text-align:center; color:#94a3b8; font-weight:800;">
+                                まだ「${applyRuby(meta.shortName)}」の きろくが ありません。<br>
+                                クイズにちょうせんして 1<ruby>位<rt>い</rt></ruby>を めざそう！
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                list.forEach((entry, idx) => {
+                    const tr = document.createElement('tr');
+                    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}位`;
+
+                    const tdRank = document.createElement('td');
+                    tdRank.style.cssText = 'text-align:center; font-weight:900; color:#facc15;';
+                    tdRank.innerHTML = applyRuby(medal);
+
+                    const tdName = document.createElement('td');
+                    tdName.style.cssText = 'font-weight:800; color:#ffffff;';
+                    tdName.textContent = entry.name;
+
+                    const tdPrize = document.createElement('td');
+                    tdPrize.style.cssText = 'text-align:right; font-weight:900; color:#4ade80;';
+                    tdPrize.innerHTML = applyRuby(entry.prizeLabel);
+
+                    const tdCount = document.createElement('td');
+                    tdCount.style.cssText = 'text-align:center; font-weight:800; color:#7dd3fc;';
+                    tdCount.innerHTML = `${entry.correctCount}<ruby>問<rt>もん</rt></ruby>`;
+
+                    tr.appendChild(tdRank);
+                    tr.appendChild(tdName);
+                    tr.appendChild(tdPrize);
+                    tr.appendChild(tdCount);
+                    tbody.appendChild(tr);
+                });
+            }
+
+            function openInfoModal(icon, titleHtml, bodyHtml, buttons = null) {
+                document.getElementById('info-icon').textContent = icon;
+                document.getElementById('info-title').innerHTML = applyRuby(titleHtml);
+                document.getElementById('info-body').innerHTML = bodyHtml;
+
+                const btnWrap = document.getElementById('info-buttons');
+                btnWrap.innerHTML = '';
+
+                if (buttons && Array.isArray(buttons)) {
+                    buttons.forEach(b => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.innerHTML = applyRuby(b.label);
+                        btn.className = b.primary ? 'btn-primary' : 'btn-secondary';
+                        btn.addEventListener('click', b.action);
+                        btnWrap.appendChild(btn);
+                    });
+                } else {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = 'わかった！';
+                    btn.className = 'btn-primary';
+                    btn.addEventListener('click', closeInfoModal);
+                    btnWrap.appendChild(btn);
+                }
+
+                document.getElementById('modal-info').classList.remove('hidden');
+            }
+
+            function closeInfoModal() {
+                playSFX('click');
+                document.getElementById('modal-info').classList.add('hidden');
+            }
+
+            function launchConfetti() {
+                const colors = ['#facc15', '#38bdf8', '#f472b6', '#4ade80', '#ef4444'];
+                for (let i = 0; i < 65; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'confetti';
+                    div.style.left = `${Math.random() * 100}vw`;
+                    div.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    div.style.animationDuration = `${2 + Math.random() * 2.5}s`;
+                    div.style.animationDelay = `${Math.random() * 0.7}s`;
+                    document.body.appendChild(div);
+                    setTimeout(() => div.remove(), 5000);
+                }
+            }
+
+            // ==========================================
+            // 11. すべてのボタンにイベントリスナーを一括登録
+            // ==========================================
+            function bindAllEvents() {
+                // ヘッダー：ふりがな＆音切り替え
+                document.getElementById('btn-furigana-toggle').addEventListener('click', () => {
+                    playSFX('click');
+                    furiganaEnabled = !furiganaEnabled;
+                    document.body.classList.toggle('no-furigana', !furiganaEnabled);
+                    document.getElementById('btn-furigana-toggle').textContent = furiganaEnabled ? 'あ ふりがな: ON' : 'あ ふりがな: OFF';
+                });
+
+                document.getElementById('btn-sound-toggle').addEventListener('click', () => {
+                    soundEnabled = !soundEnabled;
+                    const btn = document.getElementById('btn-sound-toggle');
+                    if (soundEnabled) {
+                        btn.innerHTML = '🔊 <ruby>音<rt>おと</rt></ruby>: ON';
+                        playSFX('click');
+                    } else {
+                        stopHeartbeat();
+                        btn.innerHTML = '🔇 <ruby>音<rt>おと</rt></ruby>: OFF';
+                    }
+                });
+
+                // スタート画面：全8コース選択ボタン
+                document.querySelectorAll('[data-course]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const courseKey = btn.getAttribute('data-course');
+                        if (courseKey) {
+                            startGame(courseKey);
+                        }
+                    });
+                });
+
+                // スタート画面：ランキングボタン
+                document.getElementById('btn-open-ranking-start').addEventListener('click', () => {
+                    openRankingModal('1');
+                });
+
+                // プレイ画面：ライフライン3種
+                document.getElementById('life-5050').addEventListener('click', useLifeline5050);
+                document.getElementById('life-phone').addEventListener('click', useLifelinePhone);
+                document.getElementById('life-audience').addEventListener('click', useLifelineAudience);
+
+                // プレイ画面：4択ボタン
+                document.querySelectorAll('[data-choice]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const idx = Number(btn.getAttribute('data-choice'));
+                        selectChoice(idx);
+                    });
+                });
+
+                // プレイ画面：もどる・ドロップアウト
+                document.getElementById('btn-quit-game').addEventListener('click', () => {
+                    playSFX('click');
+                    openInfoModal(
+                        '🏠',
+                        'コース選択にもどりますか？',
+                        applyRuby('<p>とちゅうで もどると 今回の 賞金は なくなります。よろしいですか？</p>'),
+                        [
+                            { label: 'つづける', primary: false, action: closeInfoModal },
+                            { label: 'もどる', primary: true, action: () => { closeInfoModal(); returnToStart(); } }
+                        ]
+                    );
+                });
+
+                document.getElementById('btn-dropout').addEventListener('click', triggerDropout);
+
+                // ファイナルアンサーモーダル
+                document.getElementById('btn-final-yes').addEventListener('click', confirmFinalAnswer);
+                document.getElementById('btn-final-no').addEventListener('click', cancelFinalAnswer);
+
+                // リザルト画面
+                document.getElementById('btn-register-score').addEventListener('click', registerScoreToRanking);
+                document.getElementById('btn-play-again').addEventListener('click', returnToStart);
+                document.getElementById('btn-open-ranking-result').addEventListener('click', () => {
+                    openRankingModal(currentCourse);
+                });
+
+                // ランキングモーダル
+                document.getElementById('btn-close-ranking-top').addEventListener('click', closeRankingModal);
+                document.getElementById('btn-close-ranking-bottom').addEventListener('click', closeRankingModal);
+
+                document.querySelectorAll('[data-rank-tab]').forEach(tabBtn => {
+                    tabBtn.addEventListener('click', () => {
+                        const tabKey = tabBtn.getAttribute('data-rank-tab');
+                        if (tabKey) switchRankingTab(tabKey);
+                    });
+                });
+
+                document.getElementById('btn-reset-rank').addEventListener('click', () => {
+                    playSFX('click');
+                    const meta = COURSE_META[activeRankingTab] || COURSE_META['1'];
+                    openInfoModal(
+                        '🗑️',
+                        'ランキングを消去しますか？',
+                        applyRuby(`<p>「${meta.shortName}」の ランキング記録を すべて 消去します。よろしいですか？</p>`),
+                        [
+                            { label: 'キャンセル', primary: false, action: closeInfoModal },
+                            {
+                                label: '消去する',
+                                primary: true,
+                                action: () => {
+                                    saveCourseRanking(activeRankingTab, []);
+                                    switchRankingTab(activeRankingTab);
+                                    closeInfoModal();
+                                }
+                            }
+                        ]
+                    );
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', bindAllEvents);
+            } else {
+                bindAllEvents();
+            }
+        })();
+    </script>
+</body>
+</html>

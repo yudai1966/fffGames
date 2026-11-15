@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星詠みの館 - 運命をひらくタロットアドベンチャー</title>
+    <!-- Google Fonts for Shippori Mincho -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        mystic: {
+                            950: '#07040d',
+                            900: '#0e0817',
+                            800: '#1a102b',
+                            700: '#2a1a45',
+                            600: '#3d2563',
+                            gold: '#dfb15b',
+                            goldlight: '#fdf0cd',
+                            rose: '#d9779f',
+                            purple: '#9d4edd'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Shippori Mincho"', '"Yu Mincho"', '"Hiragino Mincho ProN"', '"MS PMincho"', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+            background-color: #07040d;
+            color: #f3e8ff;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #07040d; }
+        ::-webkit-scrollbar-thumb { background: #3d2563; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #dfb15b; }
+
+        @keyframes floatGlow {
+            0%, 100% { transform: translateY(0px); filter: drop-shadow(0 0 12px rgba(223, 177, 91, 0.35)); }
+            50% { transform: translateY(-6px); filter: drop-shadow(0 0 22px rgba(223, 177, 91, 0.65)); }
+        }
+
+        .animate-float { animation: floatGlow 5s ease-in-out infinite; }
+        .glow-gold { filter: drop-shadow(0 0 15px rgba(223, 177, 91, 0.5)); }
+
+        /* 3D Card Flip Effects */
+        .card-container { perspective: 1200px; }
+        .card-inner {
+            transition: transform 0.9s cubic-bezier(0.15, 0.85, 0.35, 1.2);
+            transform-style: preserve-3d;
+        }
+        .card-inner.is-flipped { transform: rotateY(180deg); }
+        .card-inner.is-reversed { transform: rotateY(180deg) rotateZ(180deg); }
+        .card-front, .card-back {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .card-back { transform: rotateY(180deg); }
+
+        /* Ruby formatting for elegant furigana spacing */
+        ruby {
+            ruby-align: center;
+        }
+        rt {
+            font-size: 0.6em;
+            color: #dfb15b;
+            font-weight: normal;
+            letter-spacing: 0;
+            padding-bottom: 1px;
+        }
+    </style>
+</head>
+<body class="min-h-screen font-serif flex flex-col justify-between relative overflow-x-hidden selection:bg-mystic-rose selection:text-white">
+
+    <!-- Atmospheric background glowing ambient -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-mystic-purple/20 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute top-1/2 right-0 w-80 h-80 bg-mystic-rose/10 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+        <div class="absolute bottom-0 left-1/3 w-96 h-96 bg-mystic-700/30 rounded-full blur-3xl animate-pulse" style="animation-delay: 4s;"></div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="w-full bg-mystic-900/80 backdrop-blur border-b border-mystic-gold/20 px-6 py-4 sticky top-0 z-50 flex justify-between items-center shadow-2xl">
+        <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-full bg-mystic-gold/10 flex items-center justify-center border border-mystic-gold/50 text-mystic-gold text-lg">
+                🌙
+            </div>
+            <div>
+                <h1 class="text-base md:text-lg font-bold text-mystic-gold tracking-widest">
+                    <ruby>星詠<rt>ほしよ</rt></ruby>みの<ruby>館<rt>やかた</rt></ruby>
+                </h1>
+                <p class="text-[10px] text-purple-300 tracking-wider">
+                    <ruby>神秘<rt>しんぴ</rt></ruby>のタロット・アドベンチャー
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <!-- Sound Toggle Button -->
+            <button id="sound-btn" class="px-4 py-2 rounded-full bg-mystic-800 hover:bg-mystic-700 border border-mystic-gold/40 text-xs font-semibold text-mystic-gold transition duration-300 flex items-center gap-2 shadow-md">
+                <span id="sound-icon">🌙</span>
+                <span id="sound-text"><ruby>神秘<rt>しんぴ</rt></ruby>の<ruby>音色<rt>ねいろ</rt></ruby> OFF</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main id="app" class="flex-grow container mx-auto px-4 py-8 max-w-4xl flex flex-col justify-center items-center z-10 relative">
+        <!-- Dynamic HTML content rendered here -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-xs text-purple-300/50 border-t border-purple-900/20 z-10 relative">
+        <p>✨ <ruby>星詠<rt>ほしよ</rt></ruby>みの<ruby>館<rt>やかた</rt></ruby> &copy; 2026 — <ruby>導<rt>みちび</rt></ruby>きの光が、あなたの<ruby>心<rt>こころ</rt></ruby>をあたたかく照らしますように ✨</p>
+    </footer>
+
+    <!-- MAIN SCRIPT -->
+    <script>
+        // ==========================================
+        // 1. DATA DEFINITIONS WITH FULL RUBY SUPPORT
+        // ==========================================
+        const CATEGORIES = {
+            study: {
+                id: 'study',
+                title: '学びと学校の物語',
+                icon: '📖',
+                rubyTitle: '<ruby>学<rt>まな</rt></ruby>びと<ruby>学校<rt>がッこう</rt></ruby>の<ruby>物語<rt>ものがたり</rt></ruby>',
+                desc: '勉強や発表、学校生活で未来をひらくための導き。',
+                options: [
+                    { label: 'テストや発表で、自分の力(ちから)を発揮(はっき)したい', text: 'テストや<ruby>発表<rt>はっぴょう</rt></ruby>のときに、<ruby>緊張<rt>きんちょう</rt></ruby>せず<ruby>自分<rt>じぶん</rt></ruby>の<ruby>力<rt>ちから</rt></ruby>を<ruby>発揮<rt>はっき</rt></ruby>できますように。' },
+                    { label: '集中力(しゅうちゅうりょく)を高めて、勉強を好きになりたい', text: '<ruby>集中<rt>しゅうちゅう</rt></ruby>して<ruby>勉強<rt>べんきょう</rt></ruby>に<ruby>取<rt>と</rt></ruby>り<ruby>組<rt>く</rt></ruby>み、わかる<ruby>楽<rt>たの</rt></ruby>しさを<ruby>実感<rt>じっかん</rt></ruby>できますように。' },
+                    { label: '苦手(にがて)な教科や出来事をのりこえるヒントがほしい', text: '<ruby>苦手<rt>にがて</rt></ruby>なことにも<ruby>恐<rt>おそ</rt></ruby>れず<ruby>立<rt>た</rt></ruby>ち<ruby>向<rt>む</rt></ruby>かい、<ruby>克服<rt>こくふく</rt></ruby>するヒントが得られますように。' },
+                    { label: '新しい習いごとや挑戦(ちょうせん)を成功させたい', text: '新しいチャレンジや<ruby>習<rt>なら</rt></ruby>いごとで、<ruby>自分<rt>じぶん</rt></ruby>の<ruby>可能性<rt>かのうせい</rt></ruby>を広げられますように。' }
+                ]
+            },
+            friends: {
+                id: 'friends',
+                title: '友達と絆の物語',
+                icon: '🌸',
+                rubyTitle: '<ruby>友達<rt>ともだち</rt></ruby>と<ruby>絆<rt>きずな</rt></ruby>の<ruby>物語<rt>ものがたり</rt></ruby>',
+                desc: 'お友達との関係や、あたたかい心を通わせる導き。',
+                options: [
+                    { label: 'もっとたくさんのお友達と仲良(なかよ)くなりたい', text: '<ruby>心<rt>こころ</rt></ruby>を<ruby>通<rt>かよ</rt></ruby>わせあえる、すてきなお<ruby>友達<rt>ともだち</rt></ruby>と<ruby>巡<rt>めぐ</rt></ruby>り<ruby>会<rt>あ</rt></ruby>えますように。' },
+                    { label: '気まずくなったお友達と素直(すなお)に仲直(なかなお)りしたい', text: '<ruby>素直<rt>すなお</rt></ruby>な気持ちを伝えて、大切なお<ruby>友達<rt>ともだち</rt></ruby>と<ruby>仲直<rt>なかなお</rt></ruby>りできますように。' },
+                    { label: '自分の気持ちを相手に上手(じょうず)に伝えたい', text: '<ruby>恐<rt>おそ</rt></ruby>れずに、<ruby>自分<rt>じぶん</rt></ruby>の<ruby>本当<rt>ほんとう</rt></ruby>の思いを<ruby>優<rt>やさ</rt></ruby>しく<ruby>言葉<rt>ことば</rt></ruby>にできますように。' },
+                    { label: 'みんなと笑顔(えがお)で楽しく過ごす秘訣(ひけつ)を知りたい', text: '周りの人と<ruby>笑顔<rt>えがお</rt></ruby>で支えあい、<ruby>穏<rt>おだ</rt></ruby>やかな日々を過ごせますように。' }
+                ]
+            },
+            self: {
+                id: 'self',
+                title: '心と才能の物語',
+                icon: '🌟',
+                rubyTitle: '<ruby>心<rt>こころ</rt></ruby>と<ruby>才能<rt>さいのう</rt></ruby>の<ruby>物語<rt>ものがたり</rt></ruby>',
+                desc: 'あなたの中にねむる宝石（強みや夢）を見つける導き。',
+                options: [
+                    { label: '自分の中にねむる「特別な強み」を知りたい', text: '<ruby>自分<rt>じぶん</rt></ruby>では気づいていない、<ruby>輝<rt>かがや</rt></ruby>く<ruby>才能<rt>さいのう</rt></ruby>や<ruby>魅力<rt>みりょく</rt></ruby>を見つけられますように。' },
+                    { label: '不安(ふあん)やモヤモヤした気持ちを消し去りたい', text: '<ruby>胸<rt>むね</rt></ruby>の<ruby>奥<rt>おく</rt></ruby>の<ruby>不安<rt>ふあん</rt></ruby>が晴れて、<ruby>心<rt>こころ</rt></ruby>が<ruby>穏<rt>おだ</rt></ruby>やかで満たされますように。' },
+                    { label: '自分のことを今よりもっと好きになりたい', text: '<ruby>自分<rt>じぶん</rt></ruby>の良いところも弱いところも、<ruby>優<rt>やさ</rt></ruby>しく愛せるようになりますように。' },
+                    { label: '将来(しょうらい)目指したい夢や目標を見つけたい', text: '<ruby>未来<rt>みらい</rt></ruby>に向かってワクワク<ruby>励<rt>はげ</rt></ruby>める、素晴らしい<ruby>夢<rt>ゆめ</rt></ruby>が見つかりますように。' }
+                ]
+            },
+            fortune: {
+                id: 'fortune',
+                title: '巡る運命と未来の物語',
+                icon: '✨',
+                rubyTitle: '<ruby>巡<rt>めぐ</rt></ruby>る<ruby>運命<rt>うんめい</rt></ruby>と<ruby>未来<rt>みらい</rt></ruby>の<ruby>物語<rt>ものがたり</rt></ruby>',
+                desc: 'これからの日々に訪れる幸運や変化の導き。',
+                options: [
+                    { label: 'これから訪(おとず)れるハッピーな出来事を知りたい', text: 'これから<ruby>訪<rt>おとず</rt></ruby>れる<ruby>最高<rt>さいこう</rt></ruby>の<ruby>幸運<rt>こううん</rt></ruby>と喜びを前もって知れますように。' },
+                    { label: 'ラッキーを引き寄せる毎日の過ごし方を知りたい', text: '毎日を<ruby>輝<rt>かがや</rt></ruby>かせるための、小さな<ruby>魔法<rt>まほう</rt></ruby>のような<ruby>習慣<rt>しゅうかん</rt></ruby>を知れますように。' },
+                    { label: 'ピンチやトラブルを乗り越えるアドバイスがほしい', text: '<ruby>予期<rt>よき</rt></ruby>せぬ<ruby>困難<rt>こんなん</rt></ruby>も、しなやかに受け流して乗り越えられますように。' },
+                    { label: '近いうちに届(とど)く「素敵なチャンス」をつかみたい', text: '<ruby>巡<rt>めぐ</rt></ruby>ってくるチャンスの波をしっかり<ruby>見極<rt>みきわ</rt></ruby>めてつかめますように。' }
+                ]
+            }
+        };
+
+        const SPREADS = {
+            1: { name: '一星散華 (ワン・オラクル)', rubyName: '<ruby>一星散華<rt>いっせいさんか</rt></ruby>', cards: 1, desc: '一枚のカードが、今必要な一言を端的に教えてくれます。', positions: ['導きのメッセージ'], rubyPositions: ['<ruby>導<rt>みちび</rt></ruby>きのメッセージ'] },
+            3: { name: '三世の星彩 (スリー・カード)', rubyName: '<ruby>三世<rt>さんぜ</rt></ruby>の<ruby>星彩<rt>せいさい</rt></ruby>', cards: 3, desc: '「過去・現在・未来」の時空の流れを紡ぎ出します。', positions: ['過去のあゆみ', '現在の姿', '未来の光'], rubyPositions: ['<ruby>過去<rt>かこ</rt></ruby>のあゆみ', '<ruby>現在<rt>げんざい</rt></ruby>の<ruby>姿<rt>すがた</rt></ruby>', '<ruby>未来<rt>みらい</rt></ruby>の<ruby>光<rt>ひかり</rt></ruby>'] },
+            7: { name: '七星陣 (ヘキサグラム)', rubyName: '<ruby>七星陣<rt>しちせいじん</rt></ruby>', cards: 7, desc: '問題の理由からアドバイスまで深く解き明かします。', positions: ['過去', '現在', '未来', '助言(アドバイス)', '周囲の光', '真実の心', '巡り着く結末'], rubyPositions: ['<ruby>過去<rt>かこ</rt></ruby>', '<ruby>現在<rt>げんざい</rt></ruby>', '<ruby>未来<rt>みらい</rt></ruby>', '<ruby>助言<rt>じょげん</rt></ruby>', '<ruby>周囲<rt>しゅうい</rt></ruby>の<ruby>光<rt>ひかり</rt></ruby>', '<ruby>真実<rt>しんじつ</rt></ruby>の<ruby>心<rt>こころ</rt></ruby>', '<ruby>巡<rt>めぐ</rt></ruby>り<ruby>着<rt>つ</rt></ruby>く<ruby>結末<rt>けつまつ</rt></ruby>'] },
+            10: { name: '十界鏡 (ケルティッククロス)', rubyName: '<ruby>十界鏡<rt>じっかいきょう</rt></ruby>', cards: 10, desc: '十枚のカードがあなたの運命の全貌を鏡のように映します。', positions: ['現在のあなた', '直面する試練', '目指す星(目標)', '根底にある想い', '過ぎ去りし過去', '近き未来', 'あなたの立場', '周りの環境', '希望と恐れ', '運命の着地点'], rubyPositions: ['<ruby>現在<rt>げんざい</rt></ruby>のあなた', '<ruby>直面<rt>ちょくめん</rt></ruby>する<ruby>試練<rt>しれん</rt></ruby>', '<ruby>目指<rt>めざ</rt></ruby>す<ruby>星<rt>ほし</rt></ruby>', '<ruby>根底<rt>こんてい</rt></ruby>の<ruby>想<rt>おも</rt></ruby>い', '<ruby>過<rt>す</rt></ruby>ぎ<ruby>去<rt>さ</rt></ruby>りし<ruby>過去<rt>かこ</rt></ruby>', '<ruby>近<rt>ちか</rt></ruby>き<ruby>未来<rt>みらい</rt></ruby>', 'あなたの<ruby>立場<rt>たちば</rt></ruby>', '<ruby>周<rt>まわ</rt></ruby>りの<ruby>環境<rt>かんきょう</rt></ruby>', '<ruby>希望<rt>きぼう</rt></ruby>と<ruby>恐<rt>おそ</rt></ruby>れ', '<ruby>運命<rt>うんめい</rt></ruby>の<ruby>着地点<rt>ちゃくちてん</rt></ruby>'] }
+        };
+
+        const TAROT_DECK = [
+            { id: 0, name: '愚者', rubyName: '<ruby>愚者<rt>ぐしゃ</rt></ruby>', keyword: '自由なる旅立ち', rubyKeyword: '<ruby>自由<rt>じゆう</rt></ruby>なる<ruby>旅立<rt>たびだ</rt></ruby>ち', emblem: '🦋', color: '#60a5fa', meaning: '恐れを知らない澄み切った心が、素晴らしい冒険の扉を開きます。', detail: '新しい世界へ一歩を踏み出す時です。決めつけを捨て、ありのままの感覚で楽しんでみましょう。' },
+            { id: 1, name: '魔術師', rubyName: '<ruby>魔術師<rt>まじゅつし</rt></ruby>', keyword: '創造と開花', rubyKeyword: '<ruby>創造<rt>そうぞう</rt></ruby>と<ruby>開花<rt>かいか</rt></ruby>', emblem: '🪄', color: '#c084fc', meaning: 'あなたの手の中には、すでに必要な道具と才能が全て揃っています。', detail: 'アイデアを形にする絶好の機会です。自分を信じて「はじめてみる」ことが魔法の第一歩。' },
+            { id: 2, name: '女教皇', rubyName: '<ruby>女教皇<rt>おんなきょうこう</rt></ruby>', keyword: '静穏なる直感', rubyKeyword: '<ruby>静穏<rt>せいおん</rt></ruby>なる<ruby>直感<rt>ちょっかん</rt></ruby>', emblem: '🌙', color: '#818cf8', meaning: '静寂の中で耳をすませば、心の奥底にある真実の声が聞こえてきます。', detail: '焦って行動するよりも、じっくりと考えを深めたり本を読んだりすることが知恵となります。' },
+            { id: 3, name: '女帝', rubyName: '<ruby>女帝<rt>じょてい</rt></ruby>', keyword: '豊穣と慈愛', rubyKeyword: '<ruby>豊穣<rt>ほうじょう</rt></ruby>と<ruby>慈愛<rt>じあい</rt></ruby>', emblem: '👑', color: '#f472b6', meaning: '温かな優しさと感謝の心が、周りに大きな実りをもたらします。', detail: '誰かを心から思いやったり、自然の美しさに触れることで、心豊かな幸福が訪れます。' },
+            { id: 4, name: '皇帝', rubyName: '<ruby>皇帝<rt>こうてい</rt></ruby>', keyword: '気高きリーダーシップ', rubyKeyword: '<ruby>気高<rt>けだか</rt></ruby>きリーダーシップ', emblem: '🛡️', color: '#f87171', meaning: '意志を強く持ち、約束を守り抜く姿勢が確かな結果を生みます。', detail: '計画をしっかり立てて、最後まであきらめずに責任を果たすことで信頼が築かれます。' },
+            { id: 5, name: '法皇', rubyName: '<ruby>法皇<rt>ほうこう</rt></ruby>', keyword: '導きと寛容', rubyKeyword: '<ruby>導<rt>みちび</rt></ruby>きと<ruby>寛容<rt>かんよう</rt></ruby>', emblem: '📜', color: '#fbbf24', meaning: '信頼できる教えや知識に学ぶことで、正しい道筋が見えてきます。', detail: '目上の人の助言に素直に耳を傾けたり、ルールを大切にすることで心が落ち着きます。' },
+            { id: 6, name: '恋人', rubyName: '<ruby>恋人<rt>こいびと</rt></ruby>', keyword: '調和の選択', rubyKeyword: '<ruby>調和<rt>ちょうわ</rt></ruby>の<ruby>選択<rt>せんたく</rt></ruby>', emblem: '💖', color: '#f43f5e', meaning: '心がワクワクとときめく選択こそが、あなたを光へ導きます。', detail: '好きなものや大切な人との協調を大切にしましょう。純粋な選択が幸福を呼び込みます。' },
+            { id: 7, name: '戦車', rubyName: '<ruby>戦車<rt>せんしゃ</rt></ruby>', keyword: '勇猛なる躍進', rubyKeyword: '<ruby>勇猛<rt>ゆうもう</rt></ruby>なる<ruby>躍進<rt>やくしん</rt></ruby>', emblem: '⚡', color: '#34d399', meaning: '迷いを振り払い、真っ直ぐに目標へ向かって突き進む勢いです。', detail: '障害を恐れずスピード感を持って取り組むことで、困難を破竹の勢いで突破できます。' },
+            { id: 8, name: '力', rubyName: '<ruby>力<rt>ちから</rt></ruby>', keyword: '凛とした不屈の心', rubyKeyword: '<ruby>凛<rt>りん</rt></ruby>とした<ruby>不屈<rt>ふくつ</rt></ruby>の<ruby>心<rt>こころ</rt></ruby>', emblem: '🦁', color: '#fb923c', meaning: '無理な力で抑え込むのではなく、優しさと根気が奇跡を起こします。', detail: '自分の感情を優しくコントロールし、粘り強く向き合うことで、不可能なことも可能になります。' },
+            { id: 9, name: '隠者', rubyName: '<ruby>隠者<rt>いんじゃ</rt></ruby>', keyword: '深遠なる探求', rubyKeyword: '<ruby>深遠<rt>しんえん</rt></ruby>なる<ruby>探求<rt>たんきゅう</rt></ruby>', emblem: '🕯️', color: '#a78bfa', meaning: '一人の静かな時間の中で、物事の本当の意味が見えてきます。', detail: '静かに自分自身の心と向き合い、探求を深める時期です。自分だけの答えが見つかるでしょう。' },
+            { id: 10, name: '運命の輪', rubyName: '<ruby>運命<rt>うんめい</rt></ruby>の<ruby>輪<rt>わ</rt></ruby>', keyword: '天の巡り合わせ', rubyKeyword: '<ruby>天<rt>てん</rt></ruby>の<ruby>巡<rt>めぐ</rt></ruby>り<ruby>合<rt>あ</rt></ruby>わせ', emblem: '🎡', color: '#22d3ee', meaning: '運命の大きな歯車が回り始め、素晴らしいチャンスが訪れます。', detail: '変化の波に乗る時です。ためらわずに差し出された手に乗り、前へ進みましょう。' },
+            { id: 11, name: '正義', rubyName: '<ruby>正義<rt>せいぎ</rt></ruby>', keyword: '誠実な均衡', rubyKeyword: '<ruby>誠実<rt>せいじつ</rt></ruby>な<ruby>均衡<rt>きんこう</rt></ruby>', emblem: '⚖️', color: '#60a5fa', meaning: '偏りのない公正な目を持つことで、正しい道が示されます。', detail: '感情に流されず、冷静に真実を見極めましょう。誠実な態度が良い結果を約束します。' },
+            { id: 12, name: '刑死者', rubyName: '<ruby>刑死者<rt>けいししゃ</rt></ruby>', keyword: '視点の転換', rubyKeyword: '<ruby>視点<rt>してん</rt></ruby>の<ruby>転換<rt>てんかん</rt></ruby>', emblem: '🙃', color: '#94a3b8', meaning: '物事を逆さまから見つめ直すことで、新たな発見があります。', detail: 'あえて立ち止まり、これまでとは違う角度から眺めてみましょう。我慢の先には宝物があります。' },
+            { id: 13, name: '死神', rubyName: '<ruby>死神<rt>しみがみ</rt></ruby>', keyword: '再生の節目', rubyKeyword: '<ruby>再生<rt>さいせい</rt></ruby>の<ruby>節目<rt>ふしめ</rt></ruby>', emblem: '🕊️', color: '#c084fc', meaning: '古い終わりは、より美しい新たな始まりを告げる合図です。', detail: '執着を手放し、新しい自分へと脱皮する時です。去りゆくものを恐れる必要はありません。' },
+            { id: 14, name: '節制', rubyName: '<ruby>節制<rt>せっせい</rt></ruby>', keyword: '穏やかな調和', rubyKeyword: '<ruby>穏<rt>おだ</rt></ruby>やかな<ruby>調和<rt>ちょうわ</rt></ruby>', emblem: '🍷', color: '#4ade80', meaning: '異なるものが優しく混ざり合い、完璧なバランスが生み出されます。', detail: '極端にならず、心地よいペースを守りましょう。静かな調和が心を穏やかに癒します。' },
+            { id: 15, name: '悪魔', rubyName: '<ruby>悪魔<rt>あくま</rt></ruby>', keyword: '囚われの自覚', rubyKeyword: '<ruby>囚<rt>とら</rt></ruby>われの<ruby>自覚<rt>じかく</rt></ruby>', emblem: '🗝️', color: '#f43f5e', meaning: '甘い誘惑や負の執着に気づき、心を解放するきっかけです。', detail: '楽な方に流されそうな自分に気づくことが大切です。鍵はいつでもあなたの手の中にあります。' },
+            { id: 16, name: '塔', rubyName: '<ruby>塔<rt>とう</rt></ruby>', keyword: '覚醒の閃光', rubyKeyword: '<ruby>覚醒<rt>かくせい</rt></ruby>の<ruby>閃光<rt>せんこう</rt></ruby>', emblem: '🌩️', color: '#f97316', meaning: '古い価値観が破られ、真実の光が雷鳴とともに差し込みます。', detail: '予期せぬ変化に驚くかもしれませんが、嘘やごまかしが消え去り、真の土台が築かれます。' },
+            { id: 17, name: '星', rubyName: '<ruby>星<rt>ほし</rt></ruby>', keyword: '永遠の希望', rubyKeyword: '<ruby>永遠<rt>えいえん</rt></ruby>の<ruby>希望<rt>きぼう</rt></ruby>', emblem: '⭐', color: '#38bdf8', meaning: '暗闇の中に、決して消えない希望の星が輝き出します。', detail: '夢や希望を素直に信じましょう。あなたの澄んだ願いは、必ず天へと届きます。' },
+            { id: 18, name: '月', rubyName: '<ruby>月<rt>つき</rt></ruby>', keyword: '夢幻の揺らぎ', rubyKeyword: '<ruby>夢幻<rt>むげん</rt></ruby>の<ruby>揺<rt>ゆ</rt></ruby>らぎ', emblem: '🌕', color: '#818cf8', meaning: '幻想と不安が心を揺らし、迷いが生じやすい状態です。', detail: '見えないものを恐れすぎないでください。感性を研ぎ澄まし、朝日を静かに待ちましょう。' },
+            { id: 19, name: '太陽', rubyName: '<ruby>太陽<rt>たいよう</rt></ruby>', keyword: '至福の歓喜', rubyKeyword: '<ruby>至福<rt>しふく</rt></ruby>の<ruby>歓喜<rt>かんき</rt></ruby>', emblem: '☀️', color: '#f59e0b', meaning: 'あたたかな光が全てを照らし、最高の笑顔と生命力が満ち溢れます。', detail: '隠すものは何もありません。子供のような無邪気さで、喜びを全身で表現しましょう。' },
+            { id: 20, name: '審判', rubyName: '<ruby>審判<rt>しんぱん</rt></ruby>', keyword: '奇跡の目覚め', rubyKeyword: '<ruby>奇跡<rt>きせき</rt></ruby>の<ruby>目覚<rt>めざ</rt></ruby>め', emblem: '🎺', color: '#c084fc', meaning: '諦めていた想いが今、祝福のラッパの音とともに蘇ります。', detail: '再挑戦のチャンスです。これまでの努力が報われ、新しいステージへと呼び覚まされます。' },
+            { id: 21, name: '世界', rubyName: '<ruby>世界<rt>せかい</rt></ruby>', keyword: '崇高なる完成', rubyKeyword: '<ruby>崇高<rt>すうこう</rt></ruby>なる<ruby>完成<rt>かんせい</rt></ruby>', emblem: '🌍', color: '#34d399', meaning: 'ひとつの長い旅が最高のハッピーエンドを迎え、祝福に包まれます。', detail: '完璧な調和と達成感に満たされる瞬間です。感謝とともに、さらなる高みへ手を伸ばしましょう。' }
+        ];
+
+        // ==========================================
+        // 2. FEMININE & MYSTERIOUS AMBIENT SOUND ENGINE
+        // ==========================================
+        class AmbientSoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.isMuted = true;
+                this.padTimer = null;
+                this.bellTimer = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            toggleSound() {
+                this.init();
+                this.isMuted = !this.isMuted;
+                if (!this.isMuted) {
+                    this.startAmbientSoundscape();
+                } else {
+                    this.stopAmbientSoundscape();
+                }
+                return !this.isMuted;
+            }
+
+            playSoftTone(freq, duration = 3, vol = 0.05) {
+                if (this.isMuted || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+                    gain.gain.setValueAtTime(0, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(vol, this.ctx.currentTime + duration * 0.3);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch(e){}
+            }
+
+            playChime(freq) {
+                if (this.isMuted || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+                    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 2.5);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 2.5);
+                } catch(e){}
+            }
+
+            startAmbientSoundscape() {
+                if (this.padTimer) clearInterval(this.padTimer);
+                if (this.bellTimer) clearInterval(this.bellTimer);
+
+                const padScale = [185.00, 220.00, 277.18, 329.63, 370.00];
+                const chimeScale = [740.00, 880.00, 1108.73, 1318.51, 1479.98];
+
+                let step = 0;
+                this.padTimer = setInterval(() => {
+                    if (this.isMuted || !this.ctx) return;
+                    const f1 = padScale[step % padScale.length];
+                    const f2 = padScale[(step + 2) % padScale.length];
+                    this.playSoftTone(f1, 5, 0.04);
+                    this.playSoftTone(f2, 6, 0.03);
+                    step++;
+                }, 3500);
+
+                this.bellTimer = setInterval(() => {
+                    if (this.isMuted || !this.ctx) return;
+                    if (Math.random() > 0.3) {
+                        const chimeFreq = chimeScale[Math.floor(Math.random() * chimeScale.length)];
+                        this.playChime(chimeFreq);
+                    }
+                }, 4200);
+            }
+
+            stopAmbientSoundscape() {
+                if (this.padTimer) clearInterval(this.padTimer);
+                if (this.bellTimer) clearInterval(this.bellTimer);
+                this.padTimer = null;
+                this.bellTimer = null;
+            }
+
+            playCardFlipSound() {
+                this.playChime(1108.73);
+            }
+
+            playFanfare() {
+                [554.37, 659.25, 830.61, 1108.73].forEach((f, i) => {
+                    setTimeout(() => this.playChime(f), i * 180);
+                });
+            }
+        }
+
+        const sound = new AmbientSoundEngine();
+
+        // ==========================================
+        // 3. APPLICATION STATE
+        // ==========================================
+        const state = {
+            step: 'INTRO',
+            selectedCategory: null,
+            selectedOption: null,
+            selectedSpread: null,
+            drawnCards: [],
+            currentExploreIdx: 0
+        };
+
+        // ==========================================
+        // 4. SVG ARTWORK GENERATORS
+        // ==========================================
+        function getCardSVG(card, isFaceUp = true, isReversed = false) {
+            if (!isFaceUp) {
+                return `
+                    <svg viewBox="0 0 200 320" class="w-full h-full rounded-2xl shadow-2xl border border-mystic-gold/40">
+                        <rect width="200" height="320" rx="16" fill="#1a102b"/>
+                        <rect x="8" y="8" width="184" height="304" rx="12" fill="none" stroke="#dfb15b" stroke-width="1.5" stroke-opacity="0.5"/>
+                        <rect x="14" y="14" width="172" height="292" rx="10" fill="none" stroke="#3d2563" stroke-width="2"/>
+                        <g opacity="0.7">
+                            <circle cx="100" cy="160" r="50" fill="none" stroke="#dfb15b" stroke-width="1"/>
+                            <circle cx="100" cy="160" r="42" fill="none" stroke="#dfb15b" stroke-width="0.5" stroke-dasharray="4 3"/>
+                            <path d="M100 95 L100 225 M35 160 L165 160" stroke="#dfb15b" stroke-width="1" opacity="0.6"/>
+                            <polygon points="100,115 135,160 100,205 65,160" fill="none" stroke="#dfb15b" stroke-width="1.5"/>
+                            <circle cx="100" cy="160" r="12" fill="#2a1a45" stroke="#dfb15b" stroke-width="1.5"/>
+                            <text x="100" y="165" font-size="14" text-anchor="middle" fill="#dfb15b">🌙</text>
+                        </g>
+                    </svg>
+                `;
+            }
+
+            return `
+                <svg viewBox="0 0 200 320" class="w-full h-full rounded-2xl shadow-2xl border border-mystic-gold/60">
+                    <defs>
+                        <linearGradient id="cardBg-${card.id}" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#2a1a45" />
+                            <stop offset="100%" stop-color="#0e0817" />
+                        </linearGradient>
+                    </defs>
+                    <rect width="200" height="320" rx="16" fill="url(#cardBg-${card.id})"/>
+                    <rect x="8" y="8" width="184" height="304" rx="12" fill="none" stroke="${card.color}" stroke-width="2" stroke-opacity="0.8"/>
+                    
+                    <!-- Card Title -->
+                    <text x="100" y="34" font-family="Shippori Mincho, serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#dfb15b" letter-spacing="2">
+                        ${card.name}
+                    </text>
+                    
+                    <!-- Upright/Reversed Badge -->
+                    <text x="100" y="52" font-family="Shippori Mincho, serif" font-size="9" text-anchor="middle" fill="#fdf0cd" opacity="0.8">
+                        ${isReversed ? '【 逆位置 】' : '【 正位置 】'}
+                    </text>
+
+                    <!-- Emblem Circle -->
+                    <circle cx="100" cy="148" r="55" fill="${card.color}" fill-opacity="0.15" stroke="${card.color}" stroke-width="1.5"/>
+                    <circle cx="100" cy="148" r="48" fill="none" stroke="#dfb15b" stroke-width="0.5" stroke-dasharray="3 3"/>
+                    <text x="100" y="166" font-size="52" text-anchor="middle">${card.emblem}</text>
+
+                    <!-- Keyword -->
+                    <rect x="20" y="232" width="160" height="26" rx="13" fill="#1a102b" stroke="#dfb15b" stroke-width="1" opacity="0.9"/>
+                    <text x="100" y="249" font-family="Shippori Mincho, serif" font-size="11" font-weight="bold" text-anchor="middle" fill="#fdf0cd">
+                        ${card.keyword}
+                    </text>
+
+                    <!-- Card Number -->
+                    <text x="100" y="288" font-size="9" text-anchor="middle" fill="#9d4edd" letter-spacing="1">
+                        NO. ${card.id}
+                    </text>
+                </svg>
+            `;
+        }
+
+        function generateMasterEmblemSVG(drawnCards) {
+            const mainCard = drawnCards[0]?.card || TAROT_DECK[0];
+            return `
+                <svg viewBox="0 0 300 300" class="w-48 h-48 md:w-56 md:h-56 mx-auto glow-gold animate-float">
+                    <defs>
+                        <radialGradient id="masterHalo" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="${mainCard.color}" stop-opacity="0.5"/>
+                            <stop offset="100%" stop-color="#07040d" stop-opacity="0"/>
+                        </radialGradient>
+                    </defs>
+                    <circle cx="150" cy="150" r="140" fill="url(#masterHalo)" />
+                    <circle cx="150" cy="150" r="132" fill="none" stroke="#dfb15b" stroke-width="2" stroke-dasharray="8 4" />
+                    <circle cx="150" cy="150" r="115" fill="none" stroke="#9d4edd" stroke-width="1.5" />
+                    
+                    <polygon points="150,25 185,115 275,115 200,168 228,255 150,202 72,255 100,168 25,115 115,115" fill="none" stroke="#dfb15b" stroke-width="1.5" opacity="0.8"/>
+                    
+                    <circle cx="150" cy="150" r="48" fill="#1a102b" stroke="#dfb15b" stroke-width="2"/>
+                    <text x="150" y="164" font-size="40" text-anchor="middle">${mainCard.emblem}</text>
+                    
+                    ${drawnCards.slice(1, 5).map((dc, idx) => {
+                        const total = Math.min(drawnCards.length - 1, 4);
+                        const angle = (idx * (360 / total) - 90) * (Math.PI / 180);
+                        const cx = 150 + 95 * Math.cos(angle);
+                        const cy = 150 + 95 * Math.sin(angle);
+                        return `
+                            <circle cx="${cx}" cy="${cy}" r="20" fill="#2a1a45" stroke="${dc.card.color}" stroke-width="2"/>
+                            <text x="${cx}" y="${cy + 6}" font-size="16" text-anchor="middle">${dc.card.emblem}</text>
+                        `;
+                    }).join('')}
+                </svg>
+            `;
+        }
+
+        // ==========================================
+        // 5. VIEW RENDERERS
+        // ==========================================
+        function render() {
+            const app = document.getElementById('app');
+            app.innerHTML = '';
+
+            switch(state.step) {
+                case 'INTRO':
+                    renderIntro(app);
+                    break;
+                case 'SELECT_CATEGORY':
+                    renderCategorySelection(app);
+                    break;
+                case 'SELECT_OPTION':
+                    renderOptionSelection(app);
+                    break;
+                case 'SELECT_SPREAD':
+                    renderSpreadSelection(app);
+                    break;
+                case 'RITUAL':
+                    renderRitualPhase(app);
+                    break;
+                case 'EXPLORE':
+                    renderCardExploration(app);
+                    break;
+                case 'SUMMARY':
+                    renderSummary(app);
+                    break;
+            }
+        }
+
+        // --- STEP 0: NARRATIVE INTRO ---
+        function renderIntro(container) {
+            container.innerHTML = `
+                <div class="bg-mystic-900/90 border border-mystic-gold/40 rounded-3xl p-8 md:p-12 text-center max-w-2xl shadow-2xl space-y-6">
+                    <div class="inline-block p-4 rounded-full bg-mystic-800 border border-mystic-gold/40 text-4xl mb-2 glow-gold">
+                        🔮
+                    </div>
+                    
+                    <h2 class="text-2xl md:text-3xl font-bold text-mystic-gold leading-relaxed">
+                        ようこそ、<ruby>星詠<rt>ほしよ</rt></ruby>みの<ruby>館<rt>やかた</rt></ruby>へ
+                    </h2>
+
+                    <div class="text-xs md:text-sm text-purple-200 leading-loose text-left space-y-4 bg-mystic-950/60 p-6 rounded-2xl border border-purple-900/30">
+                        <p>
+                            静(しず)けさに包(つつ)まれたあやかしの<ruby>森<rt>もり</rt></ruby>の<ruby>奥深<rt>おくぶか</rt></ruby>く……。<br>
+                            ここには、あなたの<ruby>未来<rt>みらい</rt></ruby>をあたたかく照(て)らす<ruby>神秘<rt>しんぴ</rt></ruby>のカードが眠(ねむ)っています。
+                        </p>
+                        <p>
+                            どんな悩みも、小さな願いも、タロットの<ruby>星々<rt>ほしぼし</rt></ruby>は優(やさ)しく耳を傾(かたむ)けてくれるでしょう。
+                        </p>
+                    </div>
+
+                    <button onclick="startJourney()" class="w-full py-4 rounded-full bg-gradient-to-r from-mystic-700 via-mystic-600 to-mystic-700 hover:from-mystic-600 hover:to-mystic-500 border border-mystic-gold text-mystic-goldlight font-bold text-sm tracking-widest transition duration-300 shadow-xl glow-gold">
+                        <ruby>扉<rt>とびら</rt></ruby>をあけて、<ruby>運命<rt>うんめい</rt></ruby>の占いをはじめる ➔
+                    </button>
+                </div>
+            `;
+        }
+
+        function startJourney() {
+            sound.playSoftTone(440, 2);
+            state.step = 'SELECT_CATEGORY';
+            render();
+        }
+
+        // --- STEP 1: CATEGORY SELECTION ---
+        function renderCategorySelection(container) {
+            container.innerHTML = `
+                <div class="text-center space-y-3 mb-8">
+                    <span class="px-4 py-1 rounded-full bg-mystic-gold/10 border border-mystic-gold/30 text-mystic-gold text-xs tracking-widest">
+                        <ruby>第一章<rt>だいいちしょう</rt></ruby>：<ruby>問<rt>と</rt></ruby>いかけの<ruby>選択<rt>せんたく</rt></ruby>
+                    </span>
+                    <h2 class="text-2xl md:text-3xl font-bold text-mystic-gold">
+                        どのような<ruby>物語<rt>ものがたり</rt></ruby>をひらきますか？
+                    </h2>
+                    <p class="text-xs md:text-sm text-purple-300">
+                        いま、あなたの<ruby>心<rt>こころ</rt></ruby>がもっとも求めているテーマをお選びください。
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
+                    ${Object.values(CATEGORIES).map(cat => `
+                        <button onclick="selectCategory('${cat.id}')" class="bg-mystic-900/90 hover:bg-mystic-800 border border-purple-500/30 hover:border-mystic-gold p-6 rounded-3xl text-left transition duration-300 transform hover:-translate-y-1 shadow-xl flex items-start space-x-4 group">
+                            <div class="text-3xl bg-mystic-800 group-hover:bg-mystic-700 p-3 rounded-2xl border border-mystic-gold/30">${cat.icon}</div>
+                            <div class="flex-grow">
+                                <h3 class="text-lg font-bold text-mystic-gold group-hover:text-white mb-1">
+                                    ${cat.rubyTitle}
+                                </h3>
+                                <p class="text-xs text-purple-300 leading-relaxed">${cat.desc}</p>
+                            </div>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function selectCategory(catId) {
+            sound.playChime(659.25);
+            state.selectedCategory = CATEGORIES[catId];
+            state.step = 'SELECT_OPTION';
+            render();
+        }
+
+        // --- STEP 2: SYMBOLIC REQUEST SELECTION ---
+        function renderOptionSelection(container) {
+            const cat = state.selectedCategory;
+            container.innerHTML = `
+                <div class="text-center space-y-3 mb-8">
+                    <button onclick="state.step='SELECT_CATEGORY'; render();" class="text-xs text-purple-300 hover:text-mystic-gold underline mb-2 block mx-auto">
+                        ← カテゴリーを選びなおす
+                    </button>
+                    <span class="px-4 py-1 rounded-full bg-mystic-gold/10 border border-mystic-gold/30 text-mystic-gold text-xs tracking-widest">
+                        <ruby>第二章<rt>だいにしょう</rt></ruby>：<ruby>星<rt>ほし</rt></ruby>への<ruby>願<rt>ねが</rt></ruby>い
+                    </span>
+                    <h2 class="text-xl md:text-2xl font-bold text-mystic-gold flex items-center justify-center gap-2">
+                        <span>${cat.icon}</span> ${cat.title}
+                    </h2>
+                    <p class="text-xs md:text-sm text-purple-200">
+                        あなたの<ruby>胸<rt>むね</rt></ruby>の<ruby>奥<rt>おく</rt></ruby>にある思いに、一番近い<ruby>願<rt>ねが</rt></ruby>いをひとつお選びください。
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                    ${cat.options.map((opt, idx) => `
+                        <button onclick="selectOption('${opt.text.replace(/'/g, "\\'")}')" class="bg-mystic-900/90 hover:bg-mystic-800 border border-mystic-gold/30 hover:border-mystic-gold p-5 rounded-2xl text-left transition duration-300 shadow-xl flex items-center space-x-3 group">
+                            <span class="w-7 h-7 rounded-full bg-mystic-gold/20 border border-mystic-gold/50 text-mystic-gold flex items-center justify-center font-bold text-xs flex-shrink-0 group-hover:bg-mystic-gold group-hover:text-mystic-950 transition">
+                                ${idx + 1}
+                            </span>
+                            <span class="text-xs md:text-sm font-semibold text-purple-100 group-hover:text-mystic-gold leading-relaxed">
+                                ${opt.label}
+                            </span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function selectOption(optText) {
+            sound.playChime(880.00);
+            state.selectedOption = optText;
+            state.step = 'SELECT_SPREAD';
+            render();
+        }
+
+        // --- STEP 3: SPREAD SELECTION ---
+        function renderSpreadSelection(container) {
+            container.innerHTML = `
+                <div class="text-center space-y-3 mb-8">
+                    <button onclick="state.step='SELECT_OPTION'; render();" class="text-xs text-purple-300 hover:text-mystic-gold underline mb-2 block mx-auto">
+                        ← 願いごとを選びなおす
+                    </button>
+                    <span class="px-4 py-1 rounded-full bg-mystic-gold/10 border border-mystic-gold/30 text-mystic-gold text-xs tracking-widest">
+                        <ruby>第三章<rt>だいさんしょう</rt></ruby>：<ruby>展開法<rt>てんかいほう</rt></ruby>（スプレッド）
+                    </span>
+                    <h2 class="text-2xl md:text-3xl font-bold text-mystic-gold">
+                        カードの<ruby>陣立<rt>じんだ</rt></ruby>てをお選びください
+                    </h2>
+                    <p class="text-xs md:text-sm text-purple-200">
+                        何枚のタロットが、あなたの<ruby>運命<rt>うんめい</rt></ruby>を紐解(ひもと)くでしょう。
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                    ${Object.entries(SPREADS).map(([key, spread]) => `
+                        <button onclick="selectSpread(${key})" class="bg-mystic-900/90 hover:bg-mystic-800 border border-purple-500/30 hover:border-mystic-gold p-5 rounded-2xl text-left transition duration-300 shadow-xl flex flex-col justify-between group">
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <h3 class="text-sm font-bold text-mystic-gold group-hover:text-white">${spread.rubyName}</h3>
+                                    <span class="bg-mystic-800 text-mystic-rose text-[10px] px-2.5 py-1 rounded-full border border-mystic-rose/30">${spread.cards}枚引き</span>
+                                </div>
+                                <p class="text-xs text-purple-300 leading-relaxed mb-4">${spread.desc}</p>
+                            </div>
+                            <div class="text-right text-xs font-semibold text-mystic-gold">この<ruby>陣立<rt>じんだ</rt></ruby>てで占う ➔</div>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function selectSpread(cardsCount) {
+            sound.playChime(1108.73);
+            state.selectedSpread = SPREADS[cardsCount];
+            state.step = 'RITUAL';
+            render();
+        }
+
+        // --- STEP 4: SHUFFLE RITUAL ---
+        function renderRitualPhase(container) {
+            container.innerHTML = `
+                <div class="text-center space-y-3 mb-6">
+                    <span class="px-4 py-1 rounded-full bg-mystic-gold/10 border border-mystic-gold/30 text-mystic-gold text-xs tracking-widest">
+                        <ruby>第四章<rt>だいよんしょう</rt></ruby>：<ruby>魂<rt>たましい</rt></ruby>のシャッフル
+                    </span>
+                    <h2 class="text-2xl md:text-3xl font-bold text-mystic-gold">
+                        カードに<ruby>想<rt>おも</rt></ruby>いを込めて
+                    </h2>
+                    <p class="text-xs md:text-sm text-purple-200">
+                        ボタンを押してカードを混(ま)ぜ合わせ、あなたの波長(はちょう)と重ね合わせましょう。
+                    </p>
+                </div>
+
+                <div class="bg-mystic-900/90 border border-mystic-gold/40 p-8 rounded-3xl w-full max-w-lg text-center shadow-2xl flex flex-col items-center">
+                    <div id="deck-area" class="relative w-40 h-56 my-4 flex items-center justify-center">
+                        <div id="card-stack-3" class="absolute w-36 h-52 transition-transform duration-500 transform translate-x-3 translate-y-3">
+                            ${getCardSVG({}, false)}
+                        </div>
+                        <div id="card-stack-2" class="absolute w-36 h-52 transition-transform duration-500 transform translate-x-1.5 translate-y-1.5">
+                            ${getCardSVG({}, false)}
+                        </div>
+                        <div id="card-stack-1" class="absolute w-36 h-52 transition-transform duration-500">
+                            ${getCardSVG({}, false)}
+                        </div>
+                    </div>
+
+                    <p id="ritual-hint" class="text-xs text-mystic-gold font-semibold mb-6 h-6">
+                        「シャッフル」を押して、星の導きを呼び寄せましょう。
+                    </p>
+
+                    <div class="flex space-x-4 w-full justify-center">
+                        <button id="shuffle-btn" onclick="performShuffle()" class="px-6 py-3 rounded-full bg-mystic-800 hover:bg-mystic-700 text-mystic-gold font-bold text-xs shadow-lg border border-mystic-gold/50 transition">
+                            🔀 カードを洗う (シャッフル)
+                        </button>
+                        <button id="draw-btn" onclick="finishRitual()" disabled class="px-6 py-3 rounded-full bg-gray-800 text-gray-500 font-bold text-xs opacity-50 cursor-not-allowed shadow-lg border border-gray-700 transition">
+                            ✨ 運命のカードを引く
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        let shuffleTimes = 0;
+        function performShuffle() {
+            sound.playSoftTone(300 + Math.random() * 200, 1.5);
+            shuffleTimes++;
+
+            const stack1 = document.getElementById('card-stack-1');
+            const stack2 = document.getElementById('card-stack-2');
+            const hint = document.getElementById('ritual-hint');
+
+            stack1.classList.add('-translate-x-12', 'rotate-12');
+            stack2.classList.add('translate-x-12', '-rotate-12');
+
+            setTimeout(() => {
+                stack1.classList.remove('-translate-x-12', 'rotate-12');
+                stack2.classList.remove('translate-x-12', '-rotate-12');
+            }, 350);
+
+            if (shuffleTimes >= 2) {
+                hint.innerHTML = "星の準備が整いました。「運命のカードを引く」を押してください。";
+                const drawBtn = document.getElementById('draw-btn');
+                drawBtn.disabled = false;
+                drawBtn.className = "px-6 py-3 rounded-full bg-mystic-gold hover:bg-yellow-300 text-mystic-950 font-bold text-xs shadow-xl border border-yellow-200 transition glow-gold cursor-pointer";
+            } else {
+                hint.innerHTML = "もう一度シャッフルして、心を澄ませましょう。";
+            }
+        }
+
+        function finishRitual() {
+            sound.playFanfare();
+            const shuffled = [...TAROT_DECK].sort(() => Math.random() - 0.5);
+            
+            state.drawnCards = shuffled.slice(0, state.selectedSpread.cards).map(card => ({
+                card: card,
+                isReversed: Math.random() < 0.25
+            }));
+
+            state.currentExploreIdx = 0;
+            state.step = 'EXPLORE';
+            render();
+        }
+
+        // --- STEP 5: DEEP CARD EXPLORATION ---
+        function renderCardExploration(container) {
+            const currentItem = state.drawnCards[state.currentExploreIdx];
+            const card = currentItem.card;
+            const isReversed = currentItem.isReversed;
+            const spreadInfo = state.selectedSpread;
+            const posTitle = spreadInfo.rubyPositions ? spreadInfo.rubyPositions[state.currentExploreIdx] : `第 ${state.currentExploreIdx + 1} の星`;
+
+            container.innerHTML = `
+                <div class="text-center space-y-2 mb-4">
+                    <span class="px-4 py-1 rounded-full bg-mystic-gold/10 border border-mystic-gold/30 text-mystic-gold text-xs tracking-widest">
+                        第 ${state.currentExploreIdx + 1} / ${spreadInfo.cards} の<ruby>開眼<rt>かいげん</rt></ruby>
+                    </span>
+                    <h2 class="text-xl md:text-2xl font-bold text-mystic-gold">${posTitle}</h2>
+                </div>
+
+                <div class="flex flex-col md:flex-row items-center justify-center gap-8 w-full max-w-3xl">
+                    <div class="card-container w-52 h-80 md:w-60 md:h-92 flex-shrink-0 cursor-pointer" onclick="flipCurrentCard()">
+                        <div id="card-inner-element" class="card-inner w-full h-full relative rounded-2xl shadow-2xl">
+                            <div class="card-front absolute inset-0 w-full h-full">
+                                ${getCardSVG({}, false)}
+                            </div>
+                            <div class="card-back absolute inset-0 w-full h-full">
+                                ${getCardSVG(card, true, isReversed)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-mystic-900/90 border border-mystic-gold/40 rounded-3xl p-6 flex-grow text-left space-y-4 shadow-2xl w-full">
+                        <div class="flex items-center justify-between border-b border-purple-900/40 pb-2">
+                            <span class="text-xs font-bold text-mystic-gold bg-mystic-800 px-3 py-1 rounded-full border border-mystic-gold/30">
+                                象徴: ${card.rubyKeyword}
+                            </span>
+                            <span class="text-[10px] text-purple-300">タップで反転します</span>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                <span>${card.emblem}</span> ${card.rubyName}
+                            </h3>
+                            <p class="text-xs md:text-sm text-mystic-goldlight font-semibold mt-1">
+                                ${isReversed ? '【<ruby>逆位置<rt>ぎゃくいち</rt></ruby>の<ruby>暗示<rt>あんじ</rt></ruby>】' + card.meaning + '（少し注意深く過ごすことで好転します）' : '【<ruby>正位置<rt>せいいち</rt></ruby>の<ruby>暗示<rt>あんじ</rt></ruby>】' + card.meaning}
+                            </p>
+                        </div>
+
+                        <div class="bg-mystic-950/70 p-4 rounded-2xl border border-purple-900/40">
+                            <p class="text-xs md:text-sm text-purple-200 leading-relaxed">
+                                📜 <strong><ruby>星<rt>ほし</rt></ruby>からの告げ：</strong><br>
+                                ${card.detail}
+                            </p>
+                        </div>
+
+                        <div class="pt-2 flex justify-between items-center">
+                            <button onclick="prevCard()" ${state.currentExploreIdx === 0 ? 'disabled class="opacity-30 cursor-not-allowed text-xs text-purple-400"' : 'class="text-xs text-mystic-gold hover:underline font-semibold"'}>
+                                ⬅ 前のカードへ
+                            </button>
+
+                            ${state.currentExploreIdx < spreadInfo.cards - 1 ? `
+                                <button onclick="nextCard()" class="px-5 py-2.5 rounded-full bg-mystic-800 hover:bg-mystic-700 text-mystic-gold text-xs font-bold shadow border border-mystic-gold/40">
+                                    次のカードへ ➔
+                                </button>
+                            ` : `
+                                <button onclick="goToSummary()" class="px-6 py-2.5 rounded-full bg-mystic-gold hover:bg-yellow-300 text-mystic-950 text-xs font-bold shadow-xl border border-yellow-200 glow-gold">
+                                    <ruby>総合診断<rt>そうごうしんだん</rt></ruby>へ進む 🌟
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                const el = document.getElementById('card-inner-element');
+                if (el && !el.classList.contains('is-flipped')) {
+                    sound.playCardFlipSound();
+                    el.classList.add(isReversed ? 'is-reversed' : 'is-flipped');
+                }
+            }, 300);
+        }
+
+        function flipCurrentCard() {
+            const el = document.getElementById('card-inner-element');
+            if (el) {
+                sound.playCardFlipSound();
+                const item = state.drawnCards[state.currentExploreIdx];
+                if (el.classList.contains('is-flipped') || el.classList.contains('is-reversed')) {
+                    el.classList.remove('is-flipped', 'is-reversed');
+                } else {
+                    el.classList.add(item.isReversed ? 'is-reversed' : 'is-flipped');
+                }
+            }
+        }
+
+        function prevCard() {
+            if (state.currentExploreIdx > 0) {
+                state.currentExploreIdx--;
+                render();
+            }
+        }
+
+        function nextCard() {
+            if (state.currentExploreIdx < state.selectedSpread.cards - 1) {
+                state.currentExploreIdx++;
+                render();
+            }
+        }
+
+        function goToSummary() {
+            sound.playFanfare();
+            state.step = 'SUMMARY';
+            render();
+        }
+
+        // --- STEP 6: COMPREHENSIVE FINAL DIAGNOSIS WITH FULL RUBY & DETAILED CARD RECAP ---
+        function renderSummary(container) {
+            const drawnItems = state.drawnCards;
+            const category = state.selectedCategory;
+            const option = state.selectedOption;
+
+            container.innerHTML = `
+                <div class="text-center space-y-3 mb-6">
+                    <span class="px-4 py-1 rounded-full bg-mystic-gold/10 border border-mystic-gold/30 text-mystic-gold text-xs tracking-widest">
+                        <ruby>最終章<rt>さいしゅうしょう</rt></ruby>：<ruby>運命<rt>うんめい</rt></ruby>の<ruby>全貌<rt>ぜんぼう</rt></ruby>
+                    </span>
+                    <h2 class="text-2xl md:text-3xl font-bold text-mystic-gold">
+                        🔮 <ruby>全体<rt>ぜんたい</rt></ruby>の<ruby>物語<rt>ものがたり</rt></ruby>と<ruby>総合診断結果<rt>そうごうしんだんけっか</rt></ruby>
+                    </h2>
+                    <p class="text-xs md:text-sm text-purple-300">
+                        <ruby>星詠<rt>ほしよ</rt></ruby>みの<ruby>館<rt>やかた</rt></ruby>が<ruby>授<rt>さず</rt></ruby>ける、あなただけの<ruby>未来<rt>みらい</rt></ruby>の<ruby>道<rt>みち</rt></ruby>しるべです。
+                    </p>
+                </div>
+
+                <div class="bg-mystic-900/95 border-2 border-mystic-gold/40 rounded-3xl p-6 md:p-8 w-full max-w-3xl shadow-2xl space-y-8">
+                    <!-- Query Recap with Ruby -->
+                    <div class="bg-mystic-950/80 p-4 rounded-2xl border border-purple-900/40 flex flex-col md:flex-row justify-between items-center gap-2">
+                        <div>
+                            <span class="text-xs text-purple-400"><ruby>問<rt>と</rt></ruby>いかけた<ruby>物語<rt>ものがたり</rt></ruby>：${category.icon} ${category.title}</span>
+                            <h4 class="text-xs md:text-sm font-bold text-mystic-gold mt-1">「${option}」</h4>
+                        </div>
+                        <span class="bg-mystic-800 text-mystic-rose text-xs px-3 py-1 rounded-full border border-mystic-rose/30">
+                            ${state.selectedSpread.rubyName} (${drawnItems.length}枚)
+                        </span>
+                    </div>
+
+                    <!-- Master Dynamic Emblem -->
+                    <div class="text-center py-2">
+                        <p class="text-xs text-mystic-gold font-bold mb-3 tracking-widest">
+                            ✨ あなたの<ruby>運命<rt>うんめい</rt></ruby>を<ruby>束<rt>たば</rt></ruby>ねる「<ruby>守護<rt>しゅご</rt></ruby>の<ruby>紋章<rt>もんしょう</rt></ruby>」 ✨
+                        </p>
+                        ${generateMasterEmblemSVG(drawnItems)}
+                    </div>
+
+                    <!-- Comprehensive Narrative Synthesis with Ruby -->
+                    <div class="space-y-4 bg-mystic-800/50 p-6 rounded-2xl border border-mystic-gold/30">
+                        <h3 class="text-base font-bold text-mystic-gold flex items-center gap-2 border-b border-mystic-gold/20 pb-2">
+                            <span>🌙</span> <ruby>星詠<rt>ほしよ</rt></ruby>みの<ruby>魔女<rt>まじょ</rt></ruby>より<ruby>贈<rt>おく</rt></ruby>る<ruby>言葉<rt>ことば</rt></ruby>
+                        </h3>
+                        <p class="text-xs md:text-sm text-purple-100 leading-loose">
+                            引き寄せられたカードの中で、特に強く輝いているのは<strong>「${drawnItems[0].card.rubyName}（${drawnItems[0].card.rubyKeyword}）」</strong>です。<br>
+                            ${drawnItems.map(item => item.card.meaning).join(' ')}<br>
+                            <ruby>恐<rt>おそ</rt></ruby>れることは何もありません。あなたの<ruby>心<rt>こころ</rt></ruby>の中にある<ruby>素直<rt>すなお</rt></ruby>な<ruby>優<rt>やさ</rt></ruby>しさと<ruby>決意<rt>けつい</rt></ruby>が、<ruby>最高<rt>さいこう</rt></ruby>の<ruby>未来<rt>みらい</rt></ruby>を引き寄せる<ruby>鍵<rt>かぎ</rt></ruby>となるでしょう。
+                        </p>
+                    </div>
+
+                    <!-- EVERY CARD SHOWCASE WITH DETAILED EXPLANATION AND RUBY -->
+                    <div>
+                        <h4 class="text-sm font-bold text-mystic-gold mb-4 text-center tracking-widest">
+                            📜 <ruby>巡<rt>めぐ</rt></ruby>りあわせたすべてのカードと<ruby>導<rt>みちび</rt></ruby>き
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${drawnItems.map((item, i) => `
+                                <div class="bg-mystic-950/90 p-5 rounded-2xl border border-purple-800/40 flex flex-col space-y-3 hover:border-mystic-gold/60 transition shadow-lg">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] text-mystic-rose font-bold px-2.5 py-1 rounded-full bg-mystic-900 border border-mystic-rose/30">
+                                            ${state.selectedSpread.rubyPositions ? state.selectedSpread.rubyPositions[i] : `位置 ${i+1}`}
+                                        </span>
+                                        <span class="text-[10px] text-purple-300">
+                                            ${item.isReversed ? '【<ruby>逆位置<rt>ぎゃくいち</rt></ruby>】' : '【<ruby>正位置<rt>せいいち</rt></ruby>】'}
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-4">
+                                        <!-- Card Image Thumbnail -->
+                                        <div class="w-20 h-32 flex-shrink-0">
+                                            ${getCardSVG(item.card, true, item.isReversed)}
+                                        </div>
+                                        <div class="flex-grow space-y-1">
+                                            <h5 class="text-sm font-bold text-mystic-gold flex items-center gap-1">
+                                                <span>${item.card.emblem}</span> ${item.card.rubyName}
+                                            </h5>
+                                            <p class="text-[11px] font-semibold text-purple-200">
+                                                ${item.card.rubyKeyword}
+                                            </p>
+                                            <p class="text-[10px] text-purple-300/90 leading-tight">
+                                                ${item.card.meaning}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Detailed Explanation for each card -->
+                                    <div class="bg-mystic-900/60 p-3 rounded-xl border border-purple-900/30 text-[11px] text-purple-100 leading-relaxed">
+                                        💡 <strong><ruby>解説<rt>かいせつ</rt></ruby>とアドバイス：</strong><br>
+                                        ${item.card.detail}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Final Action Buttons -->
+                    <div class="flex justify-center pt-4 border-t border-purple-900/40">
+                        <button onclick="restartJourney()" class="px-8 py-3.5 rounded-full bg-gradient-to-r from-mystic-gold via-yellow-300 to-mystic-gold text-mystic-950 font-bold text-xs tracking-widest shadow-xl border border-yellow-100 transition glow-gold hover:scale-105">
+                            🔄 もう一度、<ruby>運命<rt>うんめい</rt></ruby>の<ruby>扉<rt>とびら</rt></ruby>をひらく
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function restartJourney() {
+            sound.playSoftTone(523.25, 1.5);
+            state.step = 'INTRO';
+            state.selectedCategory = null;
+            state.selectedOption = null;
+            state.selectedSpread = null;
+            state.drawnCards = [];
+            state.currentExploreIdx = 0;
+            render();
+        }
+
+        // ==========================================
+        // 6. INITIALIZATION
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            render();
+
+            document.getElementById('sound-btn').addEventListener('click', () => {
+                const isPlaying = sound.toggleSound();
+                document.getElementById('sound-icon').innerText = isPlaying ? '🌙' : '🔇';
+                document.getElementById('sound-text').innerHTML = isPlaying 
+                    ? '<ruby>神秘<rt>しんぴ</rt></ruby>の<ruby>音色<rt>ねいろ</rt></ruby> ON' 
+                    : '<ruby>神秘<rt>しんぴ</rt></ruby>の<ruby>音色<rt>ねいろ</rt></ruby> OFF';
+            });
+        });
+    </script>
+</body>
+</html>
